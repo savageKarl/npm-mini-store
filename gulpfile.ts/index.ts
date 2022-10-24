@@ -1,64 +1,112 @@
 import fs from "fs";
 
-import { series, dest, src, watch, task } from "gulp";
-import type { TaskFunction } from "gulp";
+import gulp, { series, dest, src, watch, task, parallel } from "gulp";
 
 import clean from "gulp-clean";
 import ts from "gulp-typescript";
 import print from "gulp-print";
 import config, { joinPath } from "../config/config";
 
-// 清理dist目录
-function cleanDist() {
-  const { distPath } = config;
-  if (fs.existsSync(distPath)) {
-    return src(distPath, { read: false }).pipe(clean({ force: true }));
-  }
-}
-// 复制任务
-function copy() {
-  src(config.srcPath + "\\**\\*").pipe(dest(config.distPath));
-}
-
 // 编译ts
-function compile() {
+function compile(fn) {
   const tsProject = ts.createProject("tsconfig.json");
-
-  // fs.readdir(config.distPath, (err, files) => {
-  //   console.debug(err);
-  //   console.debug(files);
-  // });
-  // return;
-  // 查找dist目录下所有的js和ts
   src(config.distPath + "\\**\\*.ts")
     .pipe(print() as any)
     .pipe(tsProject())
     .js.pipe(dest(config.distPath));
+  fn();
+  console.debug("compile");
 }
 
-// compile();
-
-// 压缩
-function minify() {
-  //
+function readDir(dir: string) {
+  return fs.readdirSync(dir, {});
 }
 
-function minifyJs() {}
+/**
+ * 判断制定路径是否是文件
+ * @param {读取的路径} dir
+ * @returns boolean
+ */
+function isFile(dir: string) {
+  return fs.statSync(dir).isFile();
+}
 
-function minifyCss() {}
+function getAllFiles(dir: string) {
+  const fileMap: Record<string, string[]> = {};
 
-function minifyImg() {}
+  getFiles(dir);
+  function getFiles(dir: string) {
+    const res = readDir(dir);
+    res.forEach((file) => {
+      const fullpath = joinPath(dir, file);
+      // return;
+      if (isFile(fullpath)) {
+        const ext = fullpath.split(".").reverse()[0];
 
-// task("build", (done) => {
-//   // 这里的执行都是异步的，我他妈直接无语，
-//   const actions = series(cleanDist, copy, compile)
-//   // cleanDist();
-//   // copy();
-//   // compile();
-//   actions(function() {
-    
-//   });
-// });
+        fileMap[ext]?.push(fullpath) || (fileMap[ext] = [fullpath]);
+      } else {
+        getFiles(fullpath);
+      }
+    });
+  }
 
-// exports.build = series(cleanDist, copy, compile)
+  return fileMap;
+}
 
+class BuildTask {
+  constructor() {
+    this.init();
+  }
+  fileMap: Record<string, string[]> = {};
+
+  init() {
+    this.fileMap = getAllFiles(config.srcPath);
+
+    for (let type in this.fileMap) {
+      gulp.task(`${type}-copy`, () => {
+        return gulp
+          .src(this.fileMap[type], {
+            cwd: config.srcPath,
+            base: config.srcPath,
+          })
+          .pipe(gulp.dest(config.distPath));
+      });
+    }
+
+    const fileKeys = Reflect.ownKeys(this.fileMap) as string[];
+    const copyTasks = fileKeys
+      .filter((type) => type !== "ts")
+      .map((type) => `${type}-copy`);
+
+    task("tsComplie", (fn) => {
+      const tsProject = ts.createProject("tsconfig.json");
+      src(this.fileMap["ts"], { cwd: config.srcPath, base: config.srcPath })
+        .pipe(tsProject())
+        .js.pipe(gulp.dest(config.distPath));
+
+      fn();
+    });
+
+    // const tsTasks =
+
+    console.debug(this.fileMap["ts"]);
+
+    task("clearDist", (fn) => {
+      const { distPath } = config;
+      if (fs.existsSync(distPath)) {
+        return src(distPath, { read: false, allowEmpty: true }).pipe(clean());
+      }
+      fn();
+    });
+
+    task("build", function (fn) {
+      console.debug("build");
+      fn();
+    });
+    task("build", series("clearDist", parallel(...copyTasks, 'tsComplie')));
+
+    task("default", series("build"));
+  }
+}
+
+new BuildTask();

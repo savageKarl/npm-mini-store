@@ -19,6 +19,7 @@
     "gulp-imagemin": "^8.0.0",
     "gulp-print": "^5.0.2",
     "gulp-sass": "^5.1.0",
+    "gulp-sequence": "^1.0.0",
     "gulp-sourcemaps": "^3.0.0",
     "gulp-typescript": "^6.0.0-alpha.1",
     "gulp-uglify": "^3.0.2",
