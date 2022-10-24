@@ -1,13 +1,25 @@
-import fs from "fs";
-
-import gulp, { series, dest, src, watch, task, parallel, lastRun } from "gulp";
+import gulp, { series, src, watch, task, parallel } from "gulp";
 import type { TaskFunction } from "gulp";
 
+// 清除目录
 import clean from "gulp-clean";
-import ts from "gulp-typescript";
-import print from "gulp-print";
-import config, { joinPath } from "../config/config";
+// 打包 ts
 import babel from "gulp-babel";
+// 打包 sass
+import gulpSass from "gulp-sass";
+import sass from "sass";
+// 打包 less
+import gulpLess from "gulp-less";
+// 改文件名字
+import rename from "gulp-rename";
+// 压缩 css
+import mincss from "gulp-clean-css";
+// 压缩 js
+import uglify from "gulp-uglify";
+// 判断插件
+import gulpIf from "gulp-if";
+
+import config from "../config/config";
 
 const { srcPath, distPath, css: cssType, minify } = config;
 
@@ -15,7 +27,6 @@ class BuildTask {
   constructor() {
     this.init();
   }
-  // fileMap: Record<string, string[]> = {};
 
   init() {
     const globs = {
@@ -27,38 +38,35 @@ class BuildTask {
       scss: `${srcPath}/**/*.scss`, // 匹配 scss 文件
       image: `${srcPath}/**/*.{png,jpg,jpeg,gif,svg}`, // 匹配 image 文件
       wxml: `${srcPath}/**/*.wxml`, // 匹配 wxml 文件
-      // other:[`${srcPath}/**`,`!${globs.ts[0]}`,...] // 除上述文件外的其它文件
     };
 
-    const tsProject = ts.createProject("tsconfig.json");
+    // 用babel编译ts快，但是没有类型检查
     const mainTaskMap: Record<string, TaskFunction> = {
       ts(cb) {
-        console.debug("ts dabo");
         src(globs.ts, { cwd: srcPath, base: srcPath })
           .pipe(
             babel({
               presets: [
-                [
-                  "@babel/preset-env",
-                  // {
-                  //   // 配置转换语法
-                  //   useBuiltIns: "usage", // 配置只转换在时代实际使用到的语法和填充ap
-                  //   corejs: 3, // 使用版本为 3的corejs 来进行 polyfill
-                  // },
-                ],
+                ["@babel/preset-env"],
                 ["@babel/preset-typescript"], // 用于解析 typescript
               ],
             })
           )
+          .pipe(
+            gulpIf(process.env.NODE_ENV === "pro" && minify.jsAndTs, uglify())
+          )
           .pipe(gulp.dest(distPath));
-        // .pipe(tsProject())
         cb();
       },
       js(cb) {
         src(globs.js, {
           cwd: srcPath,
           base: srcPath,
-        }).pipe(gulp.dest(distPath));
+        })
+          .pipe(
+            gulpIf(process.env.NODE_ENV === "pro" && minify.jsAndTs, uglify())
+          )
+          .pipe(gulp.dest(distPath));
         cb();
       },
       json(cb) {
@@ -75,7 +83,9 @@ class BuildTask {
           cwd: srcPath,
           base: srcPath,
           since: gulp.lastRun(mainTaskMap.wxss),
-        }).pipe(gulp.dest(distPath));
+        })
+          .pipe(gulpIf(process.env.NODE_ENV === "pro" && minify.css, mincss()))
+          .pipe(gulp.dest(distPath));
         cb();
       },
       less(cb) {
@@ -84,16 +94,24 @@ class BuildTask {
           cwd: srcPath,
           base: srcPath,
           since: gulp.lastRun(mainTaskMap.less),
-        }).pipe(gulp.dest(distPath));
+        })
+          .pipe(gulpLess()) // 解析 less
+          .pipe(rename({ extname: ".wxss" }))
+          .pipe(gulpIf(process.env.NODE_ENV === "pro" && minify.css, mincss()))
+          .pipe(gulp.dest(distPath));
         cb();
       },
       scss(cb) {
-        if (cssType !== "scss") return;
+        if (cssType !== "scss") return cb();
         src(globs.scss, {
           cwd: srcPath,
           base: srcPath,
           since: gulp.lastRun(mainTaskMap.scss),
-        }).pipe(gulp.dest(distPath));
+        })
+          .pipe(gulpSass(sass)()) // 解析 sass
+          .pipe(rename({ extname: ".wxss" })) // 改扩展名
+          .pipe(gulpIf(process.env.NODE_ENV === "pro" && minify.css, mincss()))
+          .pipe(gulp.dest(distPath));
         cb();
       },
       image(cb) {
@@ -122,43 +140,19 @@ class BuildTask {
       return src(distPath, { read: false, allowEmpty: true }).pipe(clean());
     });
 
-    task(
-      "build",
-      series("clearDist", parallel(...mainTaskList))
-    );
+    task("build", series("clearDist", parallel(...mainTaskList)));
 
     task(
       "watch",
-      series(function () {
-
-        for(let type in globs) {
+      series("build", () => {
+        for (let type in globs) {
           // cwd: srcPath 必要要传这个，要不然匹配不到文件
-          watch(globs[type], { cwd: srcPath }, mainTaskMap[type])
+          watch(globs[type], { cwd: srcPath }, mainTaskMap[type]);
         }
-
-
-        // glob(globs["ts"][0], (err, files) => {
-        //   console.debug(files, "tmd");
-        //   watch(
-        //     globs["ts"],
-        //     { cwd: srcPath },
-        //     series(function (fn) {
-        //       console.debug(files[0], "修改了");
-        //       fn();
-        //     }, mainTaskMap["ts"])
-        //   );
-        // });
-        // watch(
-        //   "D:\\300_program\\openSource\\mini-component-dev\\src\\naigationBar\\naigationBar.wxss",
-        //   function (e) {
-        //     console.debug("fuckyou");
-        //   }
-        // );
       })
     );
 
     task("default", series("build"));
   }
 }
-console.log("stat");
 new BuildTask();
