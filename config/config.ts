@@ -18,6 +18,4 @@ const config: Config = {
   },
 };
 
-// console.debug(config);
-
 export default config;

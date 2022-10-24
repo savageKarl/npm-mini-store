@@ -8,6 +8,10 @@
     "dev": "cross-env NODE_ENV=dev gulp watch",
     "build": "cross-env NODE_ENV=pro gulp build"
   },
+  "files": [
+    "/miniprogram_dist",
+    "readme.md"
+  ],
   "miniprogram": "miniprogram_dist",
   "devDependencies": {
     "@babel/core": "^7.19.6",
