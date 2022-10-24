@@ -33,21 +33,24 @@ class BuildTask {
     const tsProject = ts.createProject("tsconfig.json");
     const mainTaskMap: Record<string, TaskFunction> = {
       ts(cb) {
-        src(globs.ts, { cwd: srcPath, base: srcPath }).pipe(
-          babel({
-            presets: [
-              [
-                "@babel/preset-env",
-                // {
-                //   // 配置转换语法
-                //   useBuiltIns: "usage", // 配置只转换在时代实际使用到的语法和填充ap
-                //   corejs: 3, // 使用版本为 3的corejs 来进行 polyfill
-                // },
+        console.debug("ts dabo");
+        src(globs.ts, { cwd: srcPath, base: srcPath })
+          .pipe(
+            babel({
+              presets: [
+                [
+                  "@babel/preset-env",
+                  // {
+                  //   // 配置转换语法
+                  //   useBuiltIns: "usage", // 配置只转换在时代实际使用到的语法和填充ap
+                  //   corejs: 3, // 使用版本为 3的corejs 来进行 polyfill
+                  // },
+                ],
+                ["@babel/preset-typescript"], // 用于解析 typescript
               ],
-              ["@babel/preset-typescript"], // 用于解析 typescript
-            ],
-          })
-        ).pipe(gulp.dest(distPath));
+            })
+          )
+          .pipe(gulp.dest(distPath));
         // .pipe(tsProject())
         cb();
       },
@@ -121,21 +124,36 @@ class BuildTask {
 
     task(
       "build",
-      series("clearDist", parallel(...mainTaskList), function (fn) {
-        console.debug("ol");
-        fn();
-      })
+      series("clearDist", parallel(...mainTaskList))
     );
 
     task(
       "watch",
       series(function () {
-        watch(
-          "D:\\300_program\\openSource\\mini-component-dev\\src\\naigationBar\\naigationBar.wxss",
-          function (e) {
-            console.debug("fuckyou");
-          }
-        );
+
+        for(let type in globs) {
+          // cwd: srcPath 必要要传这个，要不然匹配不到文件
+          watch(globs[type], { cwd: srcPath }, mainTaskMap[type])
+        }
+
+
+        // glob(globs["ts"][0], (err, files) => {
+        //   console.debug(files, "tmd");
+        //   watch(
+        //     globs["ts"],
+        //     { cwd: srcPath },
+        //     series(function (fn) {
+        //       console.debug(files[0], "修改了");
+        //       fn();
+        //     }, mainTaskMap["ts"])
+        //   );
+        // });
+        // watch(
+        //   "D:\\300_program\\openSource\\mini-component-dev\\src\\naigationBar\\naigationBar.wxss",
+        //   function (e) {
+        //     console.debug("fuckyou");
+        //   }
+        // );
       })
     );
 
