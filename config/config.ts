@@ -10,7 +10,7 @@ const config: Config = {
   distPath: joinPath(__dirname, "../miniprogram_dist"),
   demoSrc: joinPath(__dirname, '../demo'),
   demoDist: joinPath(__dirname, '../miniprogram_dev'),
-  css: "sass",
+  css: "scss",
   minify: {
     css: true,
     jsAndTs: true,

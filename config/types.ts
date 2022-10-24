@@ -15,7 +15,7 @@ export type Config = {
   demoDist: string;
 
   /** css开发使用语言 */
-  css: "wxss" | "sass" | "less";
+  css: "wxss" | "scss" | "less";
 
   /** 压缩 */
   minify: {

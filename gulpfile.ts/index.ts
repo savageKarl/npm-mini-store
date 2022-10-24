@@ -1,109 +1,120 @@
 import fs from "fs";
 
-import gulp, { series, dest, src, watch, task, parallel } from "gulp";
+import gulp, { series, dest, src, watch, task, parallel, lastRun } from "gulp";
+import type { TaskFunction } from "gulp";
 
 import clean from "gulp-clean";
 import ts from "gulp-typescript";
 import print from "gulp-print";
 import config, { joinPath } from "../config/config";
 
-// 编译ts
-function compile(fn) {
-  const tsProject = ts.createProject("tsconfig.json");
-  src(config.distPath + "\\**\\*.ts")
-    .pipe(print() as any)
-    .pipe(tsProject())
-    .js.pipe(dest(config.distPath));
-  fn();
-  console.debug("compile");
-}
-
-function readDir(dir: string) {
-  return fs.readdirSync(dir, {});
-}
-
-/**
- * 判断制定路径是否是文件
- * @param {读取的路径} dir
- * @returns boolean
- */
-function isFile(dir: string) {
-  return fs.statSync(dir).isFile();
-}
-
-function getAllFiles(dir: string) {
-  const fileMap: Record<string, string[]> = {};
-
-  getFiles(dir);
-  function getFiles(dir: string) {
-    const res = readDir(dir);
-    res.forEach((file) => {
-      const fullpath = joinPath(dir, file);
-      // return;
-      if (isFile(fullpath)) {
-        const ext = fullpath.split(".").reverse()[0];
-
-        fileMap[ext]?.push(fullpath) || (fileMap[ext] = [fullpath]);
-      } else {
-        getFiles(fullpath);
-      }
-    });
-  }
-
-  return fileMap;
-}
+const { srcPath, distPath, css: cssType, minify } = config;
 
 class BuildTask {
   constructor() {
     this.init();
   }
-  fileMap: Record<string, string[]> = {};
+  // fileMap: Record<string, string[]> = {};
 
   init() {
-    this.fileMap = getAllFiles(config.srcPath);
+    const globs = {
+      ts: [`${srcPath}/**/*.ts`], // 匹配 ts 文件
+      js: `${srcPath}/**/*.js`, // 匹配 js 文件
+      json: `${srcPath}/**/*.json`, // 匹配 json 文件
+      less: `${srcPath}/**/*.less`, // 匹配 less 文件
+      wxss: `${srcPath}/**/*.wxss`, // 匹配 wxss 文件
+      scss: `${srcPath}/**/*.scss`, // 匹配 scss 文件
+      image: `${srcPath}/**/*.{png,jpg,jpeg,gif,svg}`, // 匹配 image 文件
+      wxml: `${srcPath}/**/*.wxml`, // 匹配 wxml 文件
+      // other:[`${srcPath}/**`,`!${globs.ts[0]}`,...] // 除上述文件外的其它文件
+    };
 
-    for (let type in this.fileMap) {
-      gulp.task(`${type}-copy`, () => {
-        return gulp
-          .src(this.fileMap[type], {
-            cwd: config.srcPath,
-            base: config.srcPath,
-          })
-          .pipe(gulp.dest(config.distPath));
-      });
-    }
 
-    const fileKeys = Reflect.ownKeys(this.fileMap) as string[];
-    const copyTasks = fileKeys
-      .filter((type) => type !== "ts")
-      .map((type) => `${type}-copy`);
-
-    task("tsComplie", (fn) => {
-      const tsProject = ts.createProject("tsconfig.json");
-      src(this.fileMap["ts"], { cwd: config.srcPath, base: config.srcPath })
-        .pipe(tsProject())
-        .js.pipe(gulp.dest(config.distPath));
-
-      fn();
-    });
-
-    // const tsTasks =
-
-    console.debug(this.fileMap["ts"]);
+    const tsProject = ts.createProject("tsconfig.json");
+    const mainTaskMap: Record<string, TaskFunction> = {
+      ts(cb) {
+        src(globs.ts, { cwd: srcPath, base: srcPath })
+          .pipe(tsProject())
+          .js.pipe(gulp.dest(distPath));
+        cb();
+      },
+      js(cb) {
+        src(globs.js, {
+          cwd: srcPath,
+          base: srcPath,
+        }).pipe(gulp.dest(distPath));
+        cb();
+      },
+      json(cb) {
+        src(globs.json, {
+          cwd: srcPath,
+          base: srcPath,
+          since: gulp.lastRun(mainTaskMap.json),
+        }).pipe(gulp.dest(distPath));
+        cb();
+      },
+      wxss(cb) {
+        if (cssType !== "wxss") return cb();
+        src(globs.wxss, {
+          cwd: srcPath,
+          base: srcPath,
+          since: gulp.lastRun(mainTaskMap.wxss),
+        }).pipe(gulp.dest(distPath));
+        cb();
+      },
+      less(cb) {
+        if (cssType !== "less") return cb();
+        src(globs.less, {
+          cwd: srcPath,
+          base: srcPath,
+          since: gulp.lastRun(mainTaskMap.less),
+        }).pipe(gulp.dest(distPath));
+        cb();
+      },
+      scss(cb) {
+        if (cssType !== "scss") return;
+        src(globs.scss, {
+          cwd: srcPath,
+          base: srcPath,
+          since: gulp.lastRun(mainTaskMap.scss),
+        }).pipe(gulp.dest(distPath));
+        cb();
+      },
+      image(cb) {
+        src(globs.image, {
+          cwd: srcPath,
+          base: srcPath,
+          since: gulp.lastRun(mainTaskMap.image),
+        }).pipe(gulp.dest(distPath));
+        cb();
+      },
+      wxml(cb) {
+        src(globs.wxml, {
+          cwd: srcPath,
+          base: srcPath,
+          since: gulp.lastRun(mainTaskMap.wxml),
+        }).pipe(gulp.dest(distPath));
+        cb();
+      },
+    };
+    const mainTaskList = Reflect.ownKeys(mainTaskMap).reduce((x, y) => {
+      x.push(mainTaskMap[y as any]);
+      return x;
+    }, [] as TaskFunction[]);
 
     task("clearDist", (fn) => {
-      const { distPath } = config;
-      if (fs.existsSync(distPath)) {
-        return src(distPath, { read: false, allowEmpty: true }).pipe(clean());
-      }
-      fn();
+      return src(distPath, { read: false, allowEmpty: true }).pipe(clean());
     });
 
-    task("build", function (fn) {
-      console.debug("build");
-      fn();
-    });
-    task("build", series("clearDist", parallel(...copyTasks, 'tsComplie')));
+    task("build", series("clearDist", parallel(...mainTaskList)));
+
+    task(
+      "watch",
+      series((fn) => {
+        const watchOptions = { events: ["add", "change", `unlink`] };
+        fn();
+      })
+    );
 
     task("default", series("build"));
   }

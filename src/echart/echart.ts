@@ -68,7 +68,7 @@ Component({
           height: height,
           devicePixelRatio: dpr,
         });
-
+console.debug('sedfudfk')
         chart.setOption(cacheOptions);
         // 注意这里一定要返回 chart 实例，否则会影响事件处理等
         return chart;
