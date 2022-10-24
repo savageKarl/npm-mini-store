@@ -7,6 +7,7 @@ import clean from "gulp-clean";
 import ts from "gulp-typescript";
 import print from "gulp-print";
 import config, { joinPath } from "../config/config";
+import babel from "gulp-babel";
 
 const { srcPath, distPath, css: cssType, minify } = config;
 
@@ -29,13 +30,25 @@ class BuildTask {
       // other:[`${srcPath}/**`,`!${globs.ts[0]}`,...] // 除上述文件外的其它文件
     };
 
-
     const tsProject = ts.createProject("tsconfig.json");
     const mainTaskMap: Record<string, TaskFunction> = {
       ts(cb) {
-        src(globs.ts, { cwd: srcPath, base: srcPath })
-          .pipe(tsProject())
-          .js.pipe(gulp.dest(distPath));
+        src(globs.ts, { cwd: srcPath, base: srcPath }).pipe(
+          babel({
+            presets: [
+              [
+                "@babel/preset-env",
+                // {
+                //   // 配置转换语法
+                //   useBuiltIns: "usage", // 配置只转换在时代实际使用到的语法和填充ap
+                //   corejs: 3, // 使用版本为 3的corejs 来进行 polyfill
+                // },
+              ],
+              ["@babel/preset-typescript"], // 用于解析 typescript
+            ],
+          })
+        ).pipe(gulp.dest(distPath));
+        // .pipe(tsProject())
         cb();
       },
       js(cb) {
@@ -106,18 +119,28 @@ class BuildTask {
       return src(distPath, { read: false, allowEmpty: true }).pipe(clean());
     });
 
-    task("build", series("clearDist", parallel(...mainTaskList)));
+    task(
+      "build",
+      series("clearDist", parallel(...mainTaskList), function (fn) {
+        console.debug("ol");
+        fn();
+      })
+    );
 
     task(
       "watch",
-      series((fn) => {
-        const watchOptions = { events: ["add", "change", `unlink`] };
-        fn();
+      series(function () {
+        watch(
+          "D:\\300_program\\openSource\\mini-component-dev\\src\\naigationBar\\naigationBar.wxss",
+          function (e) {
+            console.debug("fuckyou");
+          }
+        );
       })
     );
 
     task("default", series("build"));
   }
 }
-
+console.log("stat");
 new BuildTask();
