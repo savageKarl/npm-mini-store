@@ -1,13 +1,14 @@
 {
   "name": "mini-component-dev",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "miniprogram_dist/index.js",
   "author": "marx",
-  "license": "MIT",
+  "license": "GNU GPLv3",
   "scripts": {
     "dev": "cross-env NODE_ENV=dev gulp watch",
     "build": "cross-env NODE_ENV=pro gulp build"
   },
+  "miniprogram": "miniprogram_dist",
   "devDependencies": {
     "@babel/core": "^7.19.6",
     "@babel/preset-env": "^7.19.4",
