@@ -17,7 +17,7 @@ view {
   align-items: center;
 }
 .search-group {
-  width: 100%;
+  width: 1000%;
   height: 100%;
   display: flex;
   justify-content: flex-start;
@@ -26,12 +26,14 @@ view {
   border-radius: 60rpx;
   padding: 0 10rpx;
 }
-.search-group > input {
+
+input {
   font-size: 25rpx;
   flex: 1;
 }
-.search-group > image {
+
+image {
   height: 32rpx;
   width: 32rpx;
-  margin-right: 20rpx
+  margin-right: 20rpx;
 }
