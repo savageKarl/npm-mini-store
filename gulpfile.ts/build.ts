@@ -21,7 +21,7 @@ import gulpIf from "gulp-if";
 
 import config from "../config/config";
 
-import {demoTasks} from './buildDemo'
+import { demoTasks } from "./buildDemo";
 
 const { srcPath, distPath, css: cssType, minify } = config;
 
@@ -149,12 +149,16 @@ class BuildTask {
       series("build", () => {
         for (let type in globs) {
           // cwd: srcPath 必要要传这个，要不然匹配不到文件
-          watch(globs[type], { cwd: srcPath }, mainTaskMap[type]);
+          watch(
+            globs[type as keyof typeof globs],
+            { cwd: srcPath },
+            mainTaskMap[type]
+          );
         }
       })
     );
 
-      task('watch', demoTasks)
+    task("watch", demoTasks);
 
     task("default", series("build"));
   }
