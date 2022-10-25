@@ -18,6 +18,10 @@ import mincss from "gulp-clean-css";
 import uglify from "gulp-uglify";
 // conditional judgement
 import gulpIf from "gulp-if";
+// image minify
+import tinypng from "gulp-tinypng-nokey";
+// minify text in XML, JSON, CSS
+import prettyData from "gulp-pretty-data";
 
 import config from "../config/config";
 
@@ -51,6 +55,20 @@ class BuildTask {
     function isCssMinify() {
       return gulpIf(env === "pro" && minify.css, mincss());
     }
+    function isImgMinify() {
+      return gulpIf(env === "pro" && minify.img, tinypng());
+    }
+    function isMinifyText(text: "xml" | "json") {
+      return gulpIf(
+        env === "pro" && minify.img,
+        prettyData({
+          type: "minify",
+          extensions: {
+            wxml: text,
+          },
+        })
+      );
+    }
     // use babel faster, but no type check
     const mainTaskMap: Record<string, TaskFunction> = {
       ts() {
@@ -81,7 +99,9 @@ class BuildTask {
         return src(globs.json, {
           ...buildSrcOption,
           since: gulp.lastRun(mainTaskMap.json),
-        }).pipe(ifDest());
+        })
+          .pipe(isMinifyText("json"))
+          .pipe(ifDest());
       },
       wxss() {
         if (cssType !== "wxss") return;
@@ -118,13 +138,17 @@ class BuildTask {
         return src(globs.image, {
           ...buildSrcOption,
           since: gulp.lastRun(mainTaskMap.image),
-        }).pipe(ifDest());
+        })
+          .pipe(isImgMinify())
+          .pipe(ifDest());
       },
       wxml() {
         return src(globs.wxml, {
           ...buildSrcOption,
           since: gulp.lastRun(mainTaskMap.wxml),
-        }).pipe(ifDest());
+        })
+          .pipe(isMinifyText("xml"))
+          .pipe(ifDest());
       },
     };
     const mainTaskList = Reflect.ownKeys(mainTaskMap).reduce((x, y) => {
@@ -158,11 +182,8 @@ class BuildTask {
       })
     );
 
-    task("watch", clearDevComponent);
-
-    // task("default", series("build"));
+    task("default", series("build"));
   }
 }
 
 export default BuildTask;
-

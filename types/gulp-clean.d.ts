@@ -27,10 +27,10 @@ declare module "gulp-clean-css" {
 declare module "gulp-if" {
   export default function a(...args: any): any;
 }
-declare module "gulp-babel" {
+declare module "gulp-tinypng-nokey" {
   export default function a(...args: any): any;
 }
-declare module "gulp-babel" {
+declare module "gulp-pretty-data" {
   export default function a(...args: any): any;
 }
 

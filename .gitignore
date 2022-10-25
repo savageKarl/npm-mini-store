@@ -9,6 +9,6 @@ yarn-debug.log*
 yarn-error.log*
 
 miniprogram_dist
-miniprogram_dev
+miniprogram_dev/components
 node_modules
 coverage

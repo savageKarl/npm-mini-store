@@ -1,15 +1,11 @@
 export type Config = {
-  /** 需要打包的组件目录 */
-  entry: string;
-
-  /** 源代码目录 */
+  /** 组件源代码存放的目录 */
   srcPath: string;
 
   /** 打包后存放代码的目标目录 */
   distPath: string;
 
-
-  /** 开发中的组件存放目录 */
+  /** 开发中的组件存放example目录，用于实时查看开发效果 */
   devComponentPath: string;
 
   /** css开发使用语言 */

@@ -1,3 +1,0 @@
-<view class="echart" style="width:{{_width}}rpx;height:{{_height}}rpx;">
-  <ec-canvas id="{{id}}" canvas-id="{{id}}" ec="{{ ec }}"></ec-canvas>
-</view>
