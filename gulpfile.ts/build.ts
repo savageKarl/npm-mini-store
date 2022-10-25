@@ -21,6 +21,8 @@ import gulpIf from "gulp-if";
 
 import config from "../config/config";
 
+import {demoTasks} from './buildDemo'
+
 const { srcPath, distPath, css: cssType, minify } = config;
 
 class BuildTask {
@@ -151,6 +153,8 @@ class BuildTask {
         }
       })
     );
+
+      task('watch', demoTasks)
 
     task("default", series("build"));
   }

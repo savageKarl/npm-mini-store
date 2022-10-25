@@ -1,7 +1,7 @@
 export type Config = {
   /** 需要打包的组件目录 */
   entry: string;
-  
+
   /** 源代码目录 */
   srcPath: string;
 
@@ -13,6 +13,9 @@ export type Config = {
 
   /** demo 目标目录 */
   demoDist: string;
+
+  /** demo 组件存放目录 */
+  demoComponentPath: string;
 
   /** css开发使用语言 */
   css: "wxss" | "scss" | "less";
