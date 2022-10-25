@@ -1,29 +1,35 @@
 import gulp, { series, src, watch, task, parallel, dest } from "gulp";
 import type { TaskFunction } from "gulp";
 
-// 清除目录
+// clear directory
 import clean from "gulp-clean";
-// 打包 ts
+// pack typescript
 import babel from "gulp-babel";
-// 打包 sass
+// pack sass
 import gulpSass from "gulp-sass";
 import sass from "sass";
-// 打包 less
+// pack less
 import gulpLess from "gulp-less";
-// 改文件名字
+// change file name
 import rename from "gulp-rename";
-// 压缩 css
+// minify css
 import mincss from "gulp-clean-css";
-// 压缩 js
+// minify js
 import uglify from "gulp-uglify";
-// 判断插件
+// conditional judgement
 import gulpIf from "gulp-if";
 
 import config from "../config/config";
 
-import { demoTasks } from "./buildDemo";
+import { clearDevComponent } from "./buildDemo";
 
-const { srcPath, distPath, css: cssType, minify, demoComponentPath } = config;
+const {
+  srcPath,
+  distPath,
+  css: cssType,
+  minify,
+  devComponentPath: demoComponentPath,
+} = config;
 
 class BuildTask {
   constructor() {
@@ -33,14 +39,14 @@ class BuildTask {
   init() {
     const env = process.env.NODE_ENV;
     const globs = {
-      ts: [`${srcPath}/**/*.ts`], // 匹配 ts 文件
-      js: `${srcPath}/**/*.js`, // 匹配 js 文件
-      json: `${srcPath}/**/*.json`, // 匹配 json 文件
-      less: `${srcPath}/**/*.less`, // 匹配 less 文件
-      wxss: `${srcPath}/**/*.wxss`, // 匹配 wxss 文件
-      scss: `${srcPath}/**/*.scss`, // 匹配 scss 文件
-      image: `${srcPath}/**/*.{png,jpg,jpeg,gif,svg}`, // 匹配 image 文件
-      wxml: `${srcPath}/**/*.wxml`, // 匹配 wxml 文件
+      ts: [`${srcPath}/**/*.ts`], // match ts 文件
+      js: `${srcPath}/**/*.js`, // match js 文件
+      json: `${srcPath}/**/*.json`, // match json 文件
+      less: `${srcPath}/**/*.less`, // match less 文件
+      wxss: `${srcPath}/**/*.wxss`, // match wxss 文件
+      scss: `${srcPath}/**/*.scss`, // match scss 文件
+      image: `${srcPath}/**/*.{png,jpg,jpeg,gif,svg}`, // match image file
+      wxml: `${srcPath}/**/*.wxml`, // match wxml 文件
     };
 
     const buildSrcOption = { cwd: srcPath, base: srcPath };
@@ -53,7 +59,7 @@ class BuildTask {
     function isCssMinify() {
       return gulpIf(env === "pro" && minify.css, mincss());
     }
-    // 用babel编译ts快，但是没有类型检查
+    // use babel faster, but no type check
     const mainTaskMap: Record<string, TaskFunction> = {
       ts() {
         return src(globs.ts, {
@@ -63,8 +69,8 @@ class BuildTask {
           .pipe(
             babel({
               presets: [
-                ["@babel/preset-env"],
-                ["@babel/preset-typescript"], // 用于解析 typescript
+                ["@babel/preset-env"], // use to compatible es5,but no polyfill 
+                ["@babel/preset-typescript"], // babel preset, use parse ts
               ],
             })
           )
@@ -100,7 +106,7 @@ class BuildTask {
           ...buildSrcOption,
           since: gulp.lastRun(mainTaskMap.less),
         })
-          .pipe(gulpLess()) // 解析 less
+          .pipe(gulpLess()) // parse less
           .pipe(rename({ extname: ".wxss" }))
           .pipe(isCssMinify())
           .pipe(ifDest());
@@ -111,8 +117,8 @@ class BuildTask {
           ...buildSrcOption,
           since: gulp.lastRun(mainTaskMap.scss),
         })
-          .pipe(gulpSass(sass)()) // 解析 sass
-          .pipe(rename({ extname: ".wxss" })) // 改扩展名
+          .pipe(gulpSass(sass)()) // use sass plugin
+          .pipe(rename({ extname: ".wxss" })) 
           .pipe(isCssMinify())
           .pipe(ifDest());
       },
@@ -144,9 +150,9 @@ class BuildTask {
 
     task(
       "watch",
-      series(demoTasks, "buildComponent", () => {
+      series(clearDevComponent, "buildComponent", () => {
         for (let type in globs) {
-          // cwd: srcPath 必要要传这个，要不然匹配不到文件
+          // if not pass {cwd: srcPath} options，it not working to match path
           watch(
             globs[type as keyof typeof globs],
             { cwd: srcPath },
@@ -156,6 +162,8 @@ class BuildTask {
       })
     );
 
+      task('watch', clearDevComponent)
+      
     task("default", series("build"));
   }
 }

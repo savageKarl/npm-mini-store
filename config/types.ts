@@ -8,14 +8,9 @@ export type Config = {
   /** 打包后存放代码的目标目录 */
   distPath: string;
 
-  /** demo 源目录 */
-  demoSrc: string;
 
-  /** demo 目标目录 */
-  demoDist: string;
-
-  /** demo 组件存放目录 */
-  demoComponentPath: string;
+  /** 开发中的组件存放目录 */
+  devComponentPath: string;
 
   /** css开发使用语言 */
   css: "wxss" | "scss" | "less";
