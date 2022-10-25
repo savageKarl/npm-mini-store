@@ -1,15 +1,4 @@
-// import gulp from "gulp";
-
-// type EventsType = "add" | "addDir" | "unlink" | "unlinkDir";
-// "ready" | "change" | "error";
-
-// declare module "gulp" {
-//   interface WatchOptions {
-//     events?: EventsType[];
-//   }
-// }
-
-
+// the third-party lib has no declaration file, so that no error is reported for the type
 declare module "gulp-clean" {
   export default function a(...args: any): any;
 }

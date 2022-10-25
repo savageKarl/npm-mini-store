@@ -21,15 +21,7 @@ import gulpIf from "gulp-if";
 
 import config from "../config/config";
 
-import { clearDevComponent } from "./buildDemo";
-
-const {
-  srcPath,
-  distPath,
-  css: cssType,
-  minify,
-  devComponentPath: demoComponentPath,
-} = config;
+const { srcPath, distPath, css: cssType, minify, devComponentPath } = config;
 
 class BuildTask {
   constructor() {
@@ -39,19 +31,19 @@ class BuildTask {
   init() {
     const env = process.env.NODE_ENV;
     const globs = {
-      ts: [`${srcPath}/**/*.ts`], // match ts 文件
-      js: `${srcPath}/**/*.js`, // match js 文件
-      json: `${srcPath}/**/*.json`, // match json 文件
-      less: `${srcPath}/**/*.less`, // match less 文件
-      wxss: `${srcPath}/**/*.wxss`, // match wxss 文件
-      scss: `${srcPath}/**/*.scss`, // match scss 文件
+      ts: [`${srcPath}/**/*.ts`], // match ts file
+      js: `${srcPath}/**/*.js`, // match js file
+      json: `${srcPath}/**/*.json`, // match json file
+      less: `${srcPath}/**/*.less`, // match less file
+      wxss: `${srcPath}/**/*.wxss`, // match wxss file
+      scss: `${srcPath}/**/*.scss`, // match scss file
       image: `${srcPath}/**/*.{png,jpg,jpeg,gif,svg}`, // match image file
-      wxml: `${srcPath}/**/*.wxml`, // match wxml 文件
+      wxml: `${srcPath}/**/*.wxml`, // match wxml file
     };
 
     const buildSrcOption = { cwd: srcPath, base: srcPath };
     function ifDest() {
-      return gulpIf(env === "dev", dest(demoComponentPath), dest(distPath));
+      return gulpIf(env === "dev", dest(devComponentPath), dest(distPath));
     }
     function isJsMinify() {
       return gulpIf(env === "pro" && minify.jsAndTs, uglify());
@@ -69,7 +61,7 @@ class BuildTask {
           .pipe(
             babel({
               presets: [
-                ["@babel/preset-env"], // use to compatible es5,but no polyfill 
+                ["@babel/preset-env"], // use to compatible es5,but no polyfill
                 ["@babel/preset-typescript"], // babel preset, use parse ts
               ],
             })
@@ -118,7 +110,7 @@ class BuildTask {
           since: gulp.lastRun(mainTaskMap.scss),
         })
           .pipe(gulpSass(sass)()) // use sass plugin
-          .pipe(rename({ extname: ".wxss" })) 
+          .pipe(rename({ extname: ".wxss" }))
           .pipe(isCssMinify())
           .pipe(ifDest());
       },
@@ -144,6 +136,10 @@ class BuildTask {
       return src(distPath, { read: false, allowEmpty: true }).pipe(clean());
     });
 
+    const clearDevComponent: TaskFunction = () => {
+      return src(devComponentPath, { allowEmpty: true }).pipe(clean());
+    };
+
     task("buildComponent", parallel(...mainTaskList));
 
     task("build", series("clearDist", "buildComponent"));
@@ -162,10 +158,11 @@ class BuildTask {
       })
     );
 
-      task('watch', clearDevComponent)
-      
-    task("default", series("build"));
+    task("watch", clearDevComponent);
+
+    // task("default", series("build"));
   }
 }
 
 export default BuildTask;
+

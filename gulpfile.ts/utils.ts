@@ -9,6 +9,13 @@ function isFile(dir: string) {
   return fs.statSync(dir).isFile();
 }
 
+/**
+ * use to get file map
+ * like {
+ *    ts: [xxxx, xxxx],
+ *    js: [xxxx,xxxx]
+ *  }
+ */
 export function getAllFiles(dir: string) {
   const fileMap: Record<string, string[]> = {};
 
