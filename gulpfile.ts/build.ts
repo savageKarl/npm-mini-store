@@ -1,4 +1,4 @@
-import gulp, { series, src, watch, task, parallel } from "gulp";
+import gulp, { series, src, watch, task, parallel, dest } from "gulp";
 import type { TaskFunction } from "gulp";
 
 // 清除目录
@@ -23,7 +23,7 @@ import config from "../config/config";
 
 import { demoTasks } from "./buildDemo";
 
-const { srcPath, distPath, css: cssType, minify } = config;
+const { srcPath, distPath, css: cssType, minify, demoComponentPath } = config;
 
 class BuildTask {
   constructor() {
@@ -31,6 +31,7 @@ class BuildTask {
   }
 
   init() {
+    const env = process.env.NODE_ENV;
     const globs = {
       ts: [`${srcPath}/**/*.ts`], // 匹配 ts 文件
       js: `${srcPath}/**/*.js`, // 匹配 js 文件
@@ -42,10 +43,23 @@ class BuildTask {
       wxml: `${srcPath}/**/*.wxml`, // 匹配 wxml 文件
     };
 
+    const buildSrcOption = { cwd: srcPath, base: srcPath };
+    function ifDest() {
+      return gulpIf(env === "dev", dest(demoComponentPath), dest(distPath));
+    }
+    function isJsMinify() {
+      return gulpIf(env === "pro" && minify.jsAndTs, uglify());
+    }
+    function isCssMinify() {
+      return gulpIf(env === "pro" && minify.css, mincss());
+    }
     // 用babel编译ts快，但是没有类型检查
     const mainTaskMap: Record<string, TaskFunction> = {
-      ts(cb) {
-        src(globs.ts, { cwd: srcPath, base: srcPath })
+      ts() {
+        return src(globs.ts, {
+          ...buildSrcOption,
+          since: gulp.lastRun(mainTaskMap.ts),
+        })
           .pipe(
             babel({
               presets: [
@@ -54,83 +68,65 @@ class BuildTask {
               ],
             })
           )
-          .pipe(
-            gulpIf(process.env.NODE_ENV === "pro" && minify.jsAndTs, uglify())
-          )
-          .pipe(gulp.dest(distPath));
-        cb();
+          .pipe(isJsMinify())
+          .pipe(ifDest());
       },
-      js(cb) {
-        src(globs.js, {
-          cwd: srcPath,
-          base: srcPath,
+      js() {
+        return src(globs.js, {
+          ...buildSrcOption,
+          since: gulp.lastRun(mainTaskMap.js),
         })
-          .pipe(
-            gulpIf(process.env.NODE_ENV === "pro" && minify.jsAndTs, uglify())
-          )
-          .pipe(gulp.dest(distPath));
-        cb();
+          .pipe(isJsMinify())
+          .pipe(ifDest());
       },
-      json(cb) {
-        src(globs.json, {
-          cwd: srcPath,
-          base: srcPath,
+      json() {
+        return src(globs.json, {
+          ...buildSrcOption,
           since: gulp.lastRun(mainTaskMap.json),
-        }).pipe(gulp.dest(distPath));
-        cb();
+        }).pipe(ifDest());
       },
-      wxss(cb) {
-        if (cssType !== "wxss") return cb();
-        src(globs.wxss, {
-          cwd: srcPath,
-          base: srcPath,
+      wxss() {
+        if (cssType !== "wxss") return;
+        return src(globs.wxss, {
+          ...buildSrcOption,
           since: gulp.lastRun(mainTaskMap.wxss),
         })
-          .pipe(gulpIf(process.env.NODE_ENV === "pro" && minify.css, mincss()))
-          .pipe(gulp.dest(distPath));
-        cb();
+          .pipe(isCssMinify())
+          .pipe(ifDest());
       },
-      less(cb) {
-        if (cssType !== "less") return cb();
-        src(globs.less, {
-          cwd: srcPath,
-          base: srcPath,
+      less(fn) {
+        if (cssType !== "less") return fn();
+        return src(globs.less, {
+          ...buildSrcOption,
           since: gulp.lastRun(mainTaskMap.less),
         })
           .pipe(gulpLess()) // 解析 less
           .pipe(rename({ extname: ".wxss" }))
-          .pipe(gulpIf(process.env.NODE_ENV === "pro" && minify.css, mincss()))
-          .pipe(gulp.dest(distPath));
-        cb();
+          .pipe(isCssMinify())
+          .pipe(ifDest());
       },
-      scss(cb) {
-        if (cssType !== "scss") return cb();
-        src(globs.scss, {
-          cwd: srcPath,
-          base: srcPath,
+      scss(fn) {
+        if (cssType !== "scss") return fn();
+        return src(globs.scss, {
+          ...buildSrcOption,
           since: gulp.lastRun(mainTaskMap.scss),
         })
           .pipe(gulpSass(sass)()) // 解析 sass
           .pipe(rename({ extname: ".wxss" })) // 改扩展名
-          .pipe(gulpIf(process.env.NODE_ENV === "pro" && minify.css, mincss()))
-          .pipe(gulp.dest(distPath));
-        cb();
+          .pipe(isCssMinify())
+          .pipe(ifDest());
       },
-      image(cb) {
-        src(globs.image, {
-          cwd: srcPath,
-          base: srcPath,
+      image() {
+        return src(globs.image, {
+          ...buildSrcOption,
           since: gulp.lastRun(mainTaskMap.image),
-        }).pipe(gulp.dest(distPath));
-        cb();
+        }).pipe(ifDest());
       },
-      wxml(cb) {
-        src(globs.wxml, {
-          cwd: srcPath,
-          base: srcPath,
+      wxml() {
+        return src(globs.wxml, {
+          ...buildSrcOption,
           since: gulp.lastRun(mainTaskMap.wxml),
-        }).pipe(gulp.dest(distPath));
-        cb();
+        }).pipe(ifDest());
       },
     };
     const mainTaskList = Reflect.ownKeys(mainTaskMap).reduce((x, y) => {
@@ -138,15 +134,17 @@ class BuildTask {
       return x;
     }, [] as TaskFunction[]);
 
-    task("clearDist", (fn) => {
+    task("clearDist", () => {
       return src(distPath, { read: false, allowEmpty: true }).pipe(clean());
     });
 
-    task("build", series("clearDist", parallel(...mainTaskList)));
+    task("buildComponent", parallel(...mainTaskList));
+
+    task("build", series("clearDist", "buildComponent"));
 
     task(
       "watch",
-      series("build", () => {
+      series(demoTasks, "buildComponent", () => {
         for (let type in globs) {
           // cwd: srcPath 必要要传这个，要不然匹配不到文件
           watch(
@@ -157,8 +155,6 @@ class BuildTask {
         }
       })
     );
-
-    task("watch", demoTasks);
 
     task("default", series("build"));
   }

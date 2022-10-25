@@ -1,5 +1,6 @@
 <view>
+  <naigationBar />
   我又行了 哈哈哈哈
   miniprogram ui develop template
-
+正在测试 自动生成目录
 </view>
