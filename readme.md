@@ -24,6 +24,7 @@ git clone https://github.com/savage181855/mini-component-dev.git
 
 ```
 ├─config // 打包配置
+├─docs // 文档
 ├─gulpfile.ts // gulp任务
 ├─miniprogram_dev // 开发环境构建目录，可以自行替换
 │  ├─miniprogram
