@@ -103,8 +103,8 @@ class BuildTask {
           .pipe(isMinifyText("json"))
           .pipe(ifDest());
       },
-      wxss() {
-        if (cssType !== "wxss") return;
+      wxss(fn) {
+        if (cssType !== "wxss") return fn();
         return src(globs.wxss, {
           ...buildSrcOption,
           since: gulp.lastRun(mainTaskMap.wxss),
