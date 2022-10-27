@@ -4,6 +4,7 @@ import type { TaskFunction } from "gulp";
 // clear directory
 import clean from "gulp-clean";
 // pack typescript
+// use babel faster, but no type check
 import babel from "gulp-babel";
 // pack sass
 import gulpSass from "gulp-sass";
@@ -25,11 +26,9 @@ import prettyData from "gulp-pretty-data";
 
 import config from "../config/config";
 
-// import { build } from "./rollup";
+import { objectValueToArray } from "./utils";
 
 type PathType = "component" | "libs";
-type SrcType = PathType;
-type DevType = PathType;
 
 const {
   srcComponentPath,
@@ -48,14 +47,13 @@ class BuildTask {
 
   init() {
     const env = process.env.NODE_ENV;
+    const srcPathMode = {
+      component: srcComponentPath,
+      libs: srcLibsPath,
+    };
 
-    function getGlobs(srcType: PathType) {
-      const srcPathMode = {
-        component: srcComponentPath,
-        libs: srcLibsPath,
-      };
-
-      const path = srcPathMode[srcType];
+    function getGlobs(pathType: PathType) {
+      const path = srcPathMode[pathType];
       const globs = {
         ts: [`${path}/**/*.ts`], // match ts file
         js: `${path}/**/*.js`, // match js file
@@ -80,14 +78,19 @@ class BuildTask {
     //   wxml: `${srcComponentPath}/**/*.wxml`, // match wxml file
     // };
 
-    const buildSrcOption = { cwd: srcComponentPath, base: srcComponentPath };
-    function ifDest(srcType: PathType) {
-      const srcPathMode = {
+    // const buildSrcOption = { cwd: srcComponentPath, base: srcComponentPath };
+
+    function getBuildOptions(pathType: PathType) {
+      return { cwd: srcPathMode[pathType], base: srcPathMode[pathType] };
+    }
+
+    function ifDest(pathType: PathType) {
+      const devPathMode = {
         component: devComponentPath,
         libs: devLibsPath,
       };
 
-      return gulpIf(env === "dev", dest(srcPathMode[srcType]), dest(distPath));
+      return gulpIf(env === "dev", dest(devPathMode[pathType]), dest(distPath));
     }
     function isJsMinify() {
       return gulpIf(env === "pro" && minify.jsAndTs, uglify());
@@ -109,14 +112,17 @@ class BuildTask {
         })
       );
     }
-    // use babel faster, but no type check
 
-    function getTaskMap(srcType: PathType): Record<string, TaskFunction> {
-      const globs = getGlobs(srcType);
+    function getTaskMap(pathType: PathType): Record<string, TaskFunction> {
+      const globs = getGlobs(pathType);
+      const dest = ifDest(pathType);
+      const buildOptions = getBuildOptions(pathType);
+
+      console.debug(globs, buildOptions)
       const taskMap: Record<string, TaskFunction> = {
         ts() {
           return src(globs.ts, {
-            ...buildSrcOption,
+            ...buildOptions,
             since: gulp.lastRun(taskMap.ts),
           })
             .pipe(
@@ -128,74 +134,79 @@ class BuildTask {
               })
             )
             .pipe(isJsMinify())
-            .pipe(ifDest());
+            .pipe(dest);
         },
         js() {
           return src(globs.js, {
-            ...buildSrcOption,
+            ...buildOptions,
             since: gulp.lastRun(taskMap.js),
           })
             .pipe(isJsMinify())
-            .pipe(ifDest());
+            .pipe(dest);
         },
         json() {
           return src(globs.json, {
-            ...buildSrcOption,
+            ...buildOptions,
             since: gulp.lastRun(taskMap.json),
           })
             .pipe(isMinifyText("json"))
-            .pipe(ifDest());
+            .pipe(dest);
         },
         wxss(fn) {
           if (cssType !== "wxss") return fn();
           return src(globs.wxss, {
-            ...buildSrcOption,
+            ...buildOptions,
             since: gulp.lastRun(taskMap.wxss),
           })
             .pipe(isCssMinify())
-            .pipe(ifDest());
+            .pipe(dest);
         },
         less(fn) {
           if (cssType !== "less") return fn();
           return src(globs.less, {
-            ...buildSrcOption,
+            ...buildOptions,
             since: gulp.lastRun(taskMap.less),
           })
             .pipe(gulpLess()) // parse less
             .pipe(rename({ extname: ".wxss" }))
             .pipe(isCssMinify())
-            .pipe(ifDest());
+            .pipe(dest);
         },
         scss(fn) {
           if (cssType !== "scss") return fn();
           return src(globs.scss, {
-            ...buildSrcOption,
+            ...buildOptions,
             since: gulp.lastRun(taskMap.scss),
           })
             .pipe(gulpSass(sass)()) // use sass plugin
             .pipe(rename({ extname: ".wxss" }))
             .pipe(isCssMinify())
-            .pipe(ifDest());
+            .pipe(dest);
         },
         image() {
           return src(globs.image, {
-            ...buildSrcOption,
+            ...buildOptions,
             since: gulp.lastRun(taskMap.image),
           })
             .pipe(isImgMinify())
-            .pipe(ifDest());
+            .pipe(dest);
         },
         wxml() {
           return src(globs.wxml, {
-            ...buildSrcOption,
+            ...buildOptions,
             since: gulp.lastRun(taskMap.wxml),
           })
             .pipe(isMinifyText("xml"))
-            .pipe(ifDest());
+            .pipe(dest);
         },
       };
-      return;
+      return taskMap;
     }
+
+    const mainTaskMap = {
+      // component: getTaskMap("component"),
+      libs: getTaskMap("libs"),
+    };
 
     // const mainTaskMap: Record<string, TaskFunction> = {
     //   ts() {
@@ -278,10 +289,11 @@ class BuildTask {
     //       .pipe(ifDest());
     //   },
     // };
-    const mainTaskList = Reflect.ownKeys(mainTaskMap).reduce((x, y) => {
-      x.push(mainTaskMap[y as any]);
-      return x;
-    }, [] as TaskFunction[]);
+
+    // const mainTaskList = Reflect.ownKeys(mainTaskMap).reduce((x, y) => {
+    //   x.push(mainTaskMap[y as any]);
+    //   return x;
+    // }, [] as TaskFunction[]);
 
     task("clearDist", () => {
       return src(distPath, { read: false, allowEmpty: true }).pipe(clean());
@@ -291,26 +303,59 @@ class BuildTask {
       return src(devComponentPath, { allowEmpty: true }).pipe(clean());
     };
 
-    task("buildComponent", parallel(...mainTaskList));
+    // task(
+    //   "buildComponent",
+    //   parallel(...objectValueToArray(mainTaskMap["component"]))
+    // );
 
-    task("buildLibs", (fn) => {
-      src(srcLibsPath).pipe;
-      fn();
-    });
+    task("buildComponent", (fn) => fn());
 
-    task("build", series("clearDist", "buildComponent"));
+    task("buildLibs", parallel(...objectValueToArray(mainTaskMap["libs"])));
+
+    task("build", series("clearDist", parallel("buildComponent", "buildLibs")));
 
     task(
       "watch",
-      series(clearDevComponent, "buildComponent", () => {
-        for (let type in globs) {
-          // if not pass {cwd: srcPath} options，it not working to match path
-          watch(
-            globs[type as keyof typeof globs],
-            { cwd: srcComponentPath },
-            mainTaskMap[type]
-          );
+      series(clearDevComponent, "buildComponent", "buildLibs", () => {
+        watchTask();
+        function watchTask() {
+          const taskKeys = Reflect.ownKeys(
+            mainTaskMap
+          ) as any as (keyof typeof mainTaskMap)[];
+
+          for (let taskType of taskKeys) {
+            const globs = getGlobs(taskType);
+            const buildOptions = getBuildOptions(taskType);
+            const task = mainTaskMap[taskType];
+
+            for (let subType in globs) {
+              // if not pass {cwd: srcPath} options，it not working to match path
+              watch(
+                globs[taskType as keyof typeof globs],
+                buildOptions,
+                task[subType]
+              );
+            }
+          }
+
+          // for (let type in globs) {
+          //   // if not pass {cwd: srcPath} options，it not working to match path
+          //   watch(
+          //     globs[type as keyof typeof globs],
+          //     buildOptions,
+          //     mainTaskMap[type]
+          //   );
+          // }
         }
+
+        // for (let type in globs) {
+        //   // if not pass {cwd: srcPath} options，it not working to match path
+        //   watch(
+        //     globs[type as keyof typeof globs],
+        //     { cwd: srcComponentPath },
+        //     mainTaskMap[type]
+        //   );
+        // }
       })
     );
 

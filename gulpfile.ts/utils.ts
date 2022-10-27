@@ -51,3 +51,13 @@ export function removeEmptyDir(fPath: string) {
     fs.rmdirSync(fPath);
   }
 }
+
+export function objectValueToArray<T extends Record<string, unknown>>(obj: T) {
+  const keys = Reflect.ownKeys(obj) as any as (keyof T)[];
+  const arr = [];
+  for (let k of keys) {
+    arr.push(obj[k]);
+  }
+
+  return arr;
+}
