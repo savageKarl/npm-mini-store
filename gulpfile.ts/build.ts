@@ -1,5 +1,5 @@
 import gulp, { series, src, watch, task, parallel, dest } from "gulp";
-import type { TaskFunction } from "gulp";
+import type { TaskFunction, TaskCallback } from "gulp";
 
 // clear directory
 import clean from "gulp-clean";
@@ -54,7 +54,7 @@ class BuildTask {
 
     function getGlobs(pathType: PathType) {
       const path = srcPathMode[pathType];
-      const globs = {
+      return {
         ts: [`${path}/**/*.ts`], // match ts file
         js: `${path}/**/*.js`, // match js file
         json: `${path}/**/*.json`, // match json file
@@ -64,7 +64,6 @@ class BuildTask {
         image: `${path}/**/*.{png,jpg,jpeg,gif,svg}`, // match image file
         wxml: `${path}/**/*.wxml`, // match wxml file
       };
-      return globs;
     }
 
     function getBuildOptions(pathType: PathType) {
@@ -104,7 +103,7 @@ class BuildTask {
       const globs = getGlobs(pathType);
       const buildOptions = getBuildOptions(pathType);
 
-      const taskMap: Record<string, TaskFunction> = {
+      const taskMap = {
         ts() {
           return (
             src(globs.ts, {
@@ -140,7 +139,7 @@ class BuildTask {
             .pipe(isMinifyText("json"))
             .pipe(ifDest(pathType));
         },
-        wxss(fn) {
+        wxss(fn: Function) {
           if (cssType !== "wxss") return fn();
           return src(globs.wxss, {
             ...buildOptions,
@@ -149,7 +148,7 @@ class BuildTask {
             .pipe(isCssMinify())
             .pipe(ifDest(pathType));
         },
-        less(fn) {
+        less(fn: Function) {
           if (cssType !== "less") return fn();
           return src(globs.less, {
             ...buildOptions,
@@ -160,7 +159,7 @@ class BuildTask {
             .pipe(isCssMinify())
             .pipe(ifDest(pathType));
         },
-        scss(fn) {
+        scss(fn: Function) {
           if (cssType !== "scss") return fn();
           return src(globs.scss, {
             ...buildOptions,
@@ -217,7 +216,7 @@ class BuildTask {
 
     task(
       "watch",
-      series(clearDevComponent, "buildComponent", "buildLibs", () => {
+      series(clearDevComponent, "buildComponent", "buildLibs", function watchTask() {
         watchTask();
         function watchTask() {
           const taskKeys = Reflect.ownKeys(
@@ -228,11 +227,12 @@ class BuildTask {
             const globs = getGlobs(taskType);
             const buildOptions = getBuildOptions(taskType);
             const task = mainTaskMap[taskType];
+            // return;
 
             for (let subType in globs) {
               // if not pass {cwd: srcPath} options，it not working to match path
               watch(
-                globs[taskType as keyof typeof globs],
+                globs[subType as keyof typeof globs],
                 buildOptions,
                 task[subType]
               );
