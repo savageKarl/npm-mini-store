@@ -6,3 +6,10 @@
 
 - 生产环境增量编译
 - component 改变的时候要自己调用微信工具接口自动清除缓存
+
+
+修改开发目录，增加 libs 目录
+
+打包用rollup。 rollup，如果不行就算了，用gulp也行
+
+增加一个 打包 libsTask
