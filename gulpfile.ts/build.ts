@@ -67,19 +67,6 @@ class BuildTask {
       return globs;
     }
 
-    // const globs = {
-    //   ts: [`${srcComponentPath}/**/*.ts`], // match ts file
-    //   js: `${srcComponentPath}/**/*.js`, // match js file
-    //   json: `${srcComponentPath}/**/*.json`, // match json file
-    //   less: `${srcComponentPath}/**/*.less`, // match less file
-    //   wxss: `${srcComponentPath}/**/*.wxss`, // match wxss file
-    //   scss: `${srcComponentPath}/**/*.scss`, // match scss file
-    //   image: `${srcComponentPath}/**/*.{png,jpg,jpeg,gif,svg}`, // match image file
-    //   wxml: `${srcComponentPath}/**/*.wxml`, // match wxml file
-    // };
-
-    // const buildSrcOption = { cwd: srcComponentPath, base: srcComponentPath };
-
     function getBuildOptions(pathType: PathType) {
       return { cwd: srcPathMode[pathType], base: srcPathMode[pathType] };
     }
@@ -115,26 +102,27 @@ class BuildTask {
 
     function getTaskMap(pathType: PathType): Record<string, TaskFunction> {
       const globs = getGlobs(pathType);
-      const dest = ifDest(pathType);
       const buildOptions = getBuildOptions(pathType);
 
-      console.debug(globs, buildOptions)
       const taskMap: Record<string, TaskFunction> = {
         ts() {
-          return src(globs.ts, {
-            ...buildOptions,
-            since: gulp.lastRun(taskMap.ts),
-          })
-            .pipe(
-              babel({
-                presets: [
-                  ["@babel/preset-env"], // use to compatible es5,but no polyfill
-                  ["@babel/preset-typescript"], // babel preset, use parse ts
-                ],
-              })
-            )
-            .pipe(isJsMinify())
-            .pipe(dest);
+          return (
+            src(globs.ts, {
+              ...buildOptions,
+              since: gulp.lastRun(taskMap.ts),
+            })
+              .pipe(
+                babel({
+                  presets: [
+                    ["@babel/preset-env"], // use to compatible es5,but no polyfill
+                    ["@babel/preset-typescript"], // babel preset, use parse ts
+                  ],
+                })
+              )
+              .pipe(isJsMinify())
+              // here must to call ifDest function
+              .pipe(ifDest(pathType))
+          );
         },
         js() {
           return src(globs.js, {
@@ -142,7 +130,7 @@ class BuildTask {
             since: gulp.lastRun(taskMap.js),
           })
             .pipe(isJsMinify())
-            .pipe(dest);
+            .pipe(ifDest(pathType));
         },
         json() {
           return src(globs.json, {
@@ -150,7 +138,7 @@ class BuildTask {
             since: gulp.lastRun(taskMap.json),
           })
             .pipe(isMinifyText("json"))
-            .pipe(dest);
+            .pipe(ifDest(pathType));
         },
         wxss(fn) {
           if (cssType !== "wxss") return fn();
@@ -159,7 +147,7 @@ class BuildTask {
             since: gulp.lastRun(taskMap.wxss),
           })
             .pipe(isCssMinify())
-            .pipe(dest);
+            .pipe(ifDest(pathType));
         },
         less(fn) {
           if (cssType !== "less") return fn();
@@ -170,7 +158,7 @@ class BuildTask {
             .pipe(gulpLess()) // parse less
             .pipe(rename({ extname: ".wxss" }))
             .pipe(isCssMinify())
-            .pipe(dest);
+            .pipe(ifDest(pathType));
         },
         scss(fn) {
           if (cssType !== "scss") return fn();
@@ -181,7 +169,7 @@ class BuildTask {
             .pipe(gulpSass(sass)()) // use sass plugin
             .pipe(rename({ extname: ".wxss" }))
             .pipe(isCssMinify())
-            .pipe(dest);
+            .pipe(ifDest(pathType));
         },
         image() {
           return src(globs.image, {
@@ -189,7 +177,7 @@ class BuildTask {
             since: gulp.lastRun(taskMap.image),
           })
             .pipe(isImgMinify())
-            .pipe(dest);
+            .pipe(ifDest(pathType));
         },
         wxml() {
           return src(globs.wxml, {
@@ -197,103 +185,16 @@ class BuildTask {
             since: gulp.lastRun(taskMap.wxml),
           })
             .pipe(isMinifyText("xml"))
-            .pipe(dest);
+            .pipe(ifDest(pathType));
         },
       };
       return taskMap;
     }
 
     const mainTaskMap = {
-      // component: getTaskMap("component"),
+      component: getTaskMap("component"),
       libs: getTaskMap("libs"),
     };
-
-    // const mainTaskMap: Record<string, TaskFunction> = {
-    //   ts() {
-    //     return src(globs.ts, {
-    //       ...buildSrcOption,
-    //       since: gulp.lastRun(mainTaskMap.ts),
-    //     })
-    //       .pipe(
-    //         babel({
-    //           presets: [
-    //             ["@babel/preset-env"], // use to compatible es5,but no polyfill
-    //             ["@babel/preset-typescript"], // babel preset, use parse ts
-    //           ],
-    //         })
-    //       )
-    //       .pipe(isJsMinify())
-    //       .pipe(ifDest());
-    //   },
-    //   js() {
-    //     return src(globs.js, {
-    //       ...buildSrcOption,
-    //       since: gulp.lastRun(mainTaskMap.js),
-    //     })
-    //       .pipe(isJsMinify())
-    //       .pipe(ifDest());
-    //   },
-    //   json() {
-    //     return src(globs.json, {
-    //       ...buildSrcOption,
-    //       since: gulp.lastRun(mainTaskMap.json),
-    //     })
-    //       .pipe(isMinifyText("json"))
-    //       .pipe(ifDest());
-    //   },
-    //   wxss(fn) {
-    //     if (cssType !== "wxss") return fn();
-    //     return src(globs.wxss, {
-    //       ...buildSrcOption,
-    //       since: gulp.lastRun(mainTaskMap.wxss),
-    //     })
-    //       .pipe(isCssMinify())
-    //       .pipe(ifDest());
-    //   },
-    //   less(fn) {
-    //     if (cssType !== "less") return fn();
-    //     return src(globs.less, {
-    //       ...buildSrcOption,
-    //       since: gulp.lastRun(mainTaskMap.less),
-    //     })
-    //       .pipe(gulpLess()) // parse less
-    //       .pipe(rename({ extname: ".wxss" }))
-    //       .pipe(isCssMinify())
-    //       .pipe(ifDest());
-    //   },
-    //   scss(fn) {
-    //     if (cssType !== "scss") return fn();
-    //     return src(globs.scss, {
-    //       ...buildSrcOption,
-    //       since: gulp.lastRun(mainTaskMap.scss),
-    //     })
-    //       .pipe(gulpSass(sass)()) // use sass plugin
-    //       .pipe(rename({ extname: ".wxss" }))
-    //       .pipe(isCssMinify())
-    //       .pipe(ifDest());
-    //   },
-    //   image() {
-    //     return src(globs.image, {
-    //       ...buildSrcOption,
-    //       since: gulp.lastRun(mainTaskMap.image),
-    //     })
-    //       .pipe(isImgMinify())
-    //       .pipe(ifDest());
-    //   },
-    //   wxml() {
-    //     return src(globs.wxml, {
-    //       ...buildSrcOption,
-    //       since: gulp.lastRun(mainTaskMap.wxml),
-    //     })
-    //       .pipe(isMinifyText("xml"))
-    //       .pipe(ifDest());
-    //   },
-    // };
-
-    // const mainTaskList = Reflect.ownKeys(mainTaskMap).reduce((x, y) => {
-    //   x.push(mainTaskMap[y as any]);
-    //   return x;
-    // }, [] as TaskFunction[]);
 
     task("clearDist", () => {
       return src(distPath, { read: false, allowEmpty: true }).pipe(clean());
@@ -303,12 +204,12 @@ class BuildTask {
       return src(devComponentPath, { allowEmpty: true }).pipe(clean());
     };
 
-    // task(
-    //   "buildComponent",
-    //   parallel(...objectValueToArray(mainTaskMap["component"]))
-    // );
+    task(
+      "buildComponent",
+      parallel(...objectValueToArray(mainTaskMap["component"]))
+    );
 
-    task("buildComponent", (fn) => fn());
+    // task("buildComponent", (fn) => fn());
 
     task("buildLibs", parallel(...objectValueToArray(mainTaskMap["libs"])));
 
@@ -337,25 +238,7 @@ class BuildTask {
               );
             }
           }
-
-          // for (let type in globs) {
-          //   // if not pass {cwd: srcPath} options，it not working to match path
-          //   watch(
-          //     globs[type as keyof typeof globs],
-          //     buildOptions,
-          //     mainTaskMap[type]
-          //   );
-          // }
         }
-
-        // for (let type in globs) {
-        //   // if not pass {cwd: srcPath} options，it not working to match path
-        //   watch(
-        //     globs[type as keyof typeof globs],
-        //     { cwd: srcComponentPath },
-        //     mainTaskMap[type]
-        //   );
-        // }
       })
     );
 

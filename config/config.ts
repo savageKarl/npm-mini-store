@@ -16,7 +16,7 @@ const config: Config = {
 
   distPath: joinPath(__dirname, "../miniprogram_dist"),
 
-  css: "wxss",
+  css: "scss",
   minify: {
     css: true,
     jsAndTs: true,

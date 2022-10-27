@@ -1,0 +1,30 @@
+<view class="shell">
+  <view class="navBar bg-yello" style="{{navBarStyle}}">
+    <view class="statusBar" style="{{statusBarStyle}}"></view>
+    <view class="navArea" style="{{navAreaStyle}}">
+      <view class="backArea" wx:if="{{isShowBackArea}}" bind:tap="onBack">
+        <text class="backIcon cuIcon-back"></text>
+        <view class="backText">{{backText}}</view>
+      </view>
+      <view class="middle" style="{{navAreaMiddleStyle}}">
+        <view wx:if="{{navTitleOrSearch}}">
+          <search />
+        </view>
+        <view wx:else>{{navTitle}}</view>
+      </view>
+    </view>
+  </view>
+  <view class="navBarFill" style="height:{{navHeight}}px"></view>
+</view>
+<!-- <view>
+  <view class="custom-bar" style="height:{{navHeight}}px">
+    <view class="statusBarPlaceHolder" style="height: {{buttonTopHeight}}px"></view>
+    <view class="custom-bar__wrapper" style="height: {{searchHeight}}px;width: {{searchWidth}}px">
+      <view class="search-group">
+        <image src="./search.png" mode="aspectFit" />
+        <input class="search-group__input" placeholder="输入点什么吧" bindinput="onInput" />
+      </view>
+    </view>
+  </view>
+  <view class="BarNavPlaceholder" style="height:{{navHeight}}px"></view>
+</view> -->
