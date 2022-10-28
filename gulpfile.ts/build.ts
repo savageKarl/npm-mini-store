@@ -210,7 +210,7 @@ class BuildTask {
 
     // task("buildLibs", parallel(...objectValueToArray(mainTaskMap["libs"])));
 
-    task("build", series("clearDist", parallel("buildComponent")));
+    task("build", series(parallel("buildComponent")));
 
     task(
       "watch",
