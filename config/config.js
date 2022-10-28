@@ -1,10 +1,8 @@
-import path from "path";
+const path = require("path");
 
-import type { Config } from "./types";
+const joinPath = path.resolve;
 
-export const joinPath = path.resolve;
-
-const config: Config = {
+const config = {
   srcComponentPath: joinPath(__dirname, "../src/components"),
   srcLibsPath: joinPath(__dirname, "../src/libs"),
 
@@ -24,4 +22,4 @@ const config: Config = {
   },
 };
 
-export default config;
+module.exports = config;

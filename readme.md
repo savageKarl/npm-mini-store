@@ -126,3 +126,8 @@ npm run build
 2.在当前目录执行`npm login`命令进行登录。
 
 3.在当前目录执行`npm publish`进行`npm`包的发布。
+
+
+## 设计哲学
+
+为什么 gulp 和 rollup 混用？

@@ -1,5 +1,5 @@
 import gulp, { series, src, watch, task, parallel, dest } from "gulp";
-import type { TaskFunction, TaskCallback } from "gulp";
+import type { TaskFunction } from "gulp";
 
 // clear directory
 import clean from "gulp-clean";
@@ -24,7 +24,7 @@ import tinypng from "gulp-tinypng-nokey";
 // minify text in XML, JSON, CSS
 import prettyData from "gulp-pretty-data";
 
-import config from "../config/config";
+import config from "../config/config.js";
 
 import { objectValueToArray } from "./utils";
 
@@ -192,7 +192,7 @@ class BuildTask {
 
     const mainTaskMap = {
       component: getTaskMap("component"),
-      libs: getTaskMap("libs"),
+      // libs: getTaskMap("libs"),
     };
 
     task("clearDist", () => {
@@ -208,15 +208,13 @@ class BuildTask {
       parallel(...objectValueToArray(mainTaskMap["component"]))
     );
 
-    // task("buildComponent", (fn) => fn());
+    // task("buildLibs", parallel(...objectValueToArray(mainTaskMap["libs"])));
 
-    task("buildLibs", parallel(...objectValueToArray(mainTaskMap["libs"])));
-
-    task("build", series("clearDist", parallel("buildComponent", "buildLibs")));
+    task("build", series("clearDist", parallel("buildComponent")));
 
     task(
       "watch",
-      series(clearDevComponent, "buildComponent", "buildLibs", function watchTask() {
+      series(clearDevComponent, "buildComponent", function watchTask() {
         watchTask();
         function watchTask() {
           const taskKeys = Reflect.ownKeys(
@@ -227,7 +225,6 @@ class BuildTask {
             const globs = getGlobs(taskType);
             const buildOptions = getBuildOptions(taskType);
             const task = mainTaskMap[taskType];
-            // return;
 
             for (let subType in globs) {
               // if not pass {cwd: srcPath} options，it not working to match path
