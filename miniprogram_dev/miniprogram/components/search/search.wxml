@@ -1,0 +1,4 @@
+<view class="searchBox">
+  <text class="searchBox_icon cuIcon-search text-gray"></text>
+  <input class="searchBox_input" placeholder="输入点什么吧" />
+</view>

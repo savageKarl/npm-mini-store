@@ -1,0 +1,51 @@
+.navBar {
+  z-index: 999;
+  background-color: lightblue;
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100%;
+}
+
+.navArea {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+.navArea .backArea {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  justify-content: center;
+  max-width: 100%;
+  margin-left: 20rpx;
+  font-size: 30rpx;
+}
+.navArea .backIcon {
+  margin-right: 10rpx;
+}
+.navArea .middle {
+  flex: 1;
+  position: absolute;
+  text-align: center;
+  width: calc(100% - 440rpx);
+  left: 0;
+  right: 0;
+  bottom: 0;
+  top: 0;
+  margin: auto;
+  height: 60rpx;
+  font-size: 32rpx;
+  line-height: 60rpx;
+  cursor: none;
+  pointer-events: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+}
+.navArea .right {
+  border: 1px;
+  height: 40px;
+}

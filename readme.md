@@ -1,6 +1,6 @@
 # mini-component-dev
 
-> 基于 `gulp4`+ `typescript`开发的微信小程序组件库打包脚手架
+> 基于 `gulp4` +`rollup3`+ `typescript`开发的微信小程序组件库打包脚手架
 
 ## 安装
 
@@ -19,29 +19,33 @@ git clone https://github.com/savage181855/mini-component-dev.git
 - json 压缩
 - png | jpg 压缩
 
-
 ## 目录结构
 
 ```
-├─config // 打包配置
-├─docs // 文档
-├─gulpfile.ts // gulp任务
-├─miniprogram_dev // 开发环境构建目录，可以自行替换
+├─config               // 打包配置
+├─docs                // 文档
+├─gulpfile.ts         // gulp任务
+├─miniprogram_dev    // 开发环境构建目录，在config里面配置
 │  ├─miniprogram
-│  │  ├─components
+│  │  ├─components // 组件开发编译存放的目录，在config里面配置
+│  │  ├─libs       // 函数库开发打包存放的目录，在config里面配置
 │  │  └─pages
 │  │      └─index
 │  └─typings
 ├─miniprogram_dist // 生产环境构建目录，自动压缩，可以自行替换
-├─src // 组件存放的源目录
-└─types // ts类型声明文件
+├─src              // 库开发的代码
+│  ├─components    // 组件库
+│  ├─libs           // 函数库
+└─types            // ts类型声明文件
 
 ```
-## 主要说明config.ts配置文件
+
+## 主要说明 config.ts 配置文件
 
 `gulp`打包任务会读取`config.ts`的配置内容，这里可以自行修改配置和相关文件目录
 
 **类型说明**
+
 ```
 export type Config = {
   /** 组件源代码存放的目录 */
@@ -70,6 +74,7 @@ export type Config = {
 ```
 
 **当前配置**
+
 ```
 import path from "path";
 
@@ -96,14 +101,17 @@ const config: Config = {
 export default config;
 
 ```
+
 ## 使用
 
 1.安装依赖
+
 ```
 npm install
 ```
 
 2.开发环境自动检测文件改变自动编译
+
 ```
 npm run dev
 ```
@@ -111,23 +119,23 @@ npm run dev
 `gulp`会自动监测`config.srcPath`目录并打包至`config.devComponentPath`，文件修改会自动重写进行打包。
 
 3.生产环境打包自动压缩
+
 ```
 npm run build
 ```
-`gulp`会打包`config.srcPath`目录并压缩至`config.distPath`。
 
+`gulp`会打包`config.srcPath`目录并压缩至`config.distPath`。
 
 ## 发布
 
 **注意**：必须使用官网的镜像！！！
 
-1.去[npmjs官网](https://www.npmjs.com/)注册一个账号。
+1.去[npmjs 官网](https://www.npmjs.com/)注册一个账号。
 
 2.在当前目录执行`npm login`命令进行登录。
 
 3.在当前目录执行`npm publish`进行`npm`包的发布。
 
-
-## 设计哲学
+## 问题
 
 为什么 gulp 和 rollup 混用？
