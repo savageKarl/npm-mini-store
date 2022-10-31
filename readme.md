@@ -23,39 +23,45 @@ git clone https://github.com/savage181855/mini-component-dev.git
 
 ```
 ├─config               // 打包配置
-├─docs                // 文档
-├─gulpfile.ts         // gulp任务
-├─miniprogram_dev    // 开发环境构建目录，在config里面配置
+├─gulpfile.ts          // gulp任务
+├─miniprogram_dev      // 开发环境构建目录，在config里面配置
 │  ├─miniprogram
-│  │  ├─components // 组件开发编译存放的目录，在config里面配置
-│  │  ├─libs       // 函数库开发打包存放的目录，在config里面配置
+│  │  ├─components     // 组件开发编译存放的目录，在config里面配置
+│  │  ├─libs           // 函数库开发打包存放的目录，在config里面配置
 │  │  └─pages
 │  │      └─index
 │  └─typings
-├─miniprogram_dist // 生产环境构建目录，自动压缩，可以自行替换
-├─src              // 库开发的代码
-│  ├─components    // 组件库
-│  ├─libs           // 函数库
-└─types            // ts类型声明文件
+├─miniprogram_dist     // 生产环境构建目录，自动压缩，可以自行替换
+├─rollup               // rollup 打包器的配置文件
+├─src                  // 库开发的代码
+│  ├─components        // 组件库
+│  ├─libs              // 函数库
+└─types                // ts类型声明文件
 
 ```
 
-## 主要说明 config.ts 配置文件
+## 主要说明 config.js 配置文件
 
 `gulp`打包任务会读取`config.ts`的配置内容，这里可以自行修改配置和相关文件目录
 
 **类型说明**
 
 ```
-export type Config = {
-  /** 组件源代码存放的目录 */
-  srcPath: string;
+declare const config: {
+   /** 组件源代码存放的目录 */
+  srcComponentPath: string;
 
-  /** 打包后存放代码的目标目录 */
-  distPath: string;
+  /** lib 源代码存放目录 */
+  srcLibsPath: string;
 
   /** 开发中的组件存放example目录，用于实时查看开发效果 */
   devComponentPath: string;
+
+  /** 开发中的 libs 存放example目录，用于实时查看开发效果 */
+  devLibsPath: string;
+
+  /** 打包后存放代码的目标目录 */
+  distPath: string;
 
   /** css开发使用语言 */
   css: "wxss" | "scss" | "less";
@@ -64,41 +70,64 @@ export type Config = {
   minify: {
     /** js 和 ts是否压缩 */
     jsAndTs: boolean;
+
     /** css 是否压缩 */
     css: boolean;
+
     /** 图片 是否压缩 */
     img: boolean;
   };
 };
+export default config;
+
 
 ```
 
 **当前配置**
 
 ```
-import path from "path";
+const path = require("path");
 
-import type { Config } from "./types";
+const joinPath = path.resolve;
 
-export const joinPath = path.resolve;
+const config = {
+  /** 组件源代码存放的目录 */
+  srcComponentPath: joinPath(__dirname, "../src/components"),
 
-const config: Config = {
-  srcPath: joinPath(__dirname, "../src"),
-  distPath: joinPath(__dirname, "../miniprogram_dist"),
+  /** lib 源代码存放目录 */
+  srcLibsPath: joinPath(__dirname, "../src/libs"),
+
+  /** 开发中的组件存放example目录，用于实时查看开发效果 */
   devComponentPath: joinPath(
     __dirname,
     "../miniprogram_dev/miniprogram/components"
   ),
 
-  css: "wxss",
+  /** 开发中的 libs 存放example目录，用于实时查看开发效果 */
+  devLibsPath: joinPath(__dirname, "../miniprogram_dev/miniprogram/libs"),
+
+  /** 打包后存放代码的目标目录 */
+  distPath: joinPath(__dirname, "../miniprogram_dist"),
+
+  /** css开发使用语言 */
+  css: "scss",
+
+  /** 压缩 */
   minify: {
-    css: true,
+
+    /** js 和 ts是否压缩 */
     jsAndTs: true,
+
+    /** css 是否压缩 */
+    css: true,
+
+    /** 图片 是否压缩 */
     img: true,
   },
 };
 
-export default config;
+module.exports = config;
+
 
 ```
 
@@ -125,6 +154,11 @@ npm run build
 ```
 
 `gulp`会打包`config.srcPath`目录并压缩至`config.distPath`。
+
+## 重点
+`gulp`会用于编译`components`目录，`rollup`会打包`libs`目录并生成类型声明文件。
+
+`libs`只支持`typescript`，`components`支持`js`和`ts`混用，但是建议尽量用`ts`开发。
 
 ## 发布
 
