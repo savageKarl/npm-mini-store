@@ -4,7 +4,7 @@
   "main": "miniprogram_dist/index.js",
   "author": "savage",
   "license": "GPLv3",
-  "description": "基于 gulp@4.x + rollup@2.x 搭建的微信小程序组件库打包脚手架",
+  "description": "基于 gulp4 + rollup2 搭建的微信小程序组件库打包脚手架",
   "scripts": {
     "devComponent": "cross-env NODE_ENV=dev gulp watch",
     "buildComponent": "cross-env NODE_ENV=pro gulp build",

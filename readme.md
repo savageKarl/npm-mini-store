@@ -1,6 +1,6 @@
 # mini-component-dev
 
-> 基于 `gulp4` +`rollup3`+ `typescript`开发的微信小程序组件库打包脚手架
+> 基于 `gulp4` +`rollup2`+ `typescript`开发的微信小程序组件库打包脚手架
 
 ## 安装
 
@@ -42,7 +42,7 @@ git clone https://github.com/savage181855/mini-component-dev.git
 
 ## 主要说明 config.js 配置文件
 
-`gulp`打包任务会读取`config.ts`的配置内容，这里可以自行修改配置和相关文件目录
+`gulp`打包任务会读取`config.ts`的配置内容，这里可以自行修改配置和相关文件目录。
 
 **类型说明**
 
@@ -145,7 +145,9 @@ npm install
 npm run dev
 ```
 
-`gulp`会自动监测`config.srcPath`目录并打包至`config.devComponentPath`，文件修改会自动重写进行打包。
+`gulp`会自动监测`config.srcComponentPath`目录并编译至`config.devComponentPath`，文件修改会自动重写进行编译。
+
+`rollup`会自动监测`config.srcLibsPath`目录并打包至`config.devLibsPath`，文件修改会自动重写进行打包。
 
 3.生产环境打包自动压缩
 
@@ -153,12 +155,15 @@ npm run dev
 npm run build
 ```
 
-`gulp`会打包`config.srcPath`目录并压缩至`config.distPath`。
+`gulp`会编译`config.srcComponentPath`目录并根据`config`文件配置压缩至`config.distPath`。
+
+`rollup`会打包`config.srcLibsPath`目录并根据`config`文件配置压缩至`config.distPath`。
 
 ## 重点
+
 `gulp`会用于编译`components`目录，`rollup`会打包`libs`目录并生成类型声明文件。
 
-`libs`只支持`typescript`，`components`支持`js`和`ts`混用，但是建议尽量用`ts`开发。
+`libs`只支持`typescript`文件，`components`支持`js`和`ts`混用，这里建议尽量用`ts`开发。
 
 ## 发布
 
@@ -169,7 +174,3 @@ npm run build
 2.在当前目录执行`npm login`命令进行登录。
 
 3.在当前目录执行`npm publish`进行`npm`包的发布。
-
-## 问题
-
-为什么 gulp 和 rollup 混用？
