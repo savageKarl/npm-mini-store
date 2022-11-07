@@ -1,0 +1,15 @@
+{
+  "name": "miniprogram_dev",
+  "version": "0.0.0",
+  "description": "微信小程序组件库开发模板",
+  "scripts": {
+  },
+  "keywords": [],
+  "author": "savage",
+  "license": "",
+  "dependencies": {
+  },
+  "devDependencies": {
+    "miniprogram-api-typings": "^2.8.3-1"
+  }
+}
