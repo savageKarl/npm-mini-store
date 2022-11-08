@@ -14,9 +14,26 @@ import type {
   AppNewOptions,
   PageOptions,
   PageNewOptions,
+  ComponentOptions,
+  ComponentNewOptions,
+  StoreOptions,
 } from "./types";
 
 import { setTip } from "./tips";
+
+import { updateStoreState, clearStoreDep } from "./defineStore";
+
+import { getCurrentPagePath } from "./utils";
+
+function callUseStoreRef(
+  instance: any,
+  stores?: BaseStoreOptions | StoreOptions
+) {
+  stores?.forEach((s) => {
+    const { useStoreRef, ...rest } = s;
+    useStoreRef(instance, rest);
+  });
+}
 
 export function proxyApp() {
   setTip("isProxyApp");
@@ -30,18 +47,13 @@ export function proxyApp() {
       onLaunch(o: WechatMiniprogram.App.LaunchShowOption) {
         this.type = "app";
         const { stores } = options;
-
-        stores?.forEach((s) => {
-          const { useStoreRef, ...rest } = s;
-          useStoreRef(this, rest);
-        });
-
+        callUseStoreRef(this, stores);
         options?.onLaunch?.call(this, o);
       },
     } as AppOptions;
 
-    originApp(newOptions);
-  } as any;
+    return originApp(newOptions);
+  };
 }
 
 export function proxyPage(globalOptions: PageOptions) {
@@ -54,142 +66,133 @@ export function proxyPage(globalOptions: PageOptions) {
       ...options,
       onLoad(o) {
         const { stores } = options;
-        stores?.forEach((s) => {
-          const { useStoreRef, ...rest } = s;
-          useStoreRef(this, rest);
-        });
+        callUseStoreRef(this, stores);
 
         globalOptions?.onLoad?.call(this, o);
         options?.onLoad?.call(this, o);
       },
       onShow() {
-        // const { stores } = options;
-        // stores?.forEach((s) => {
-        //   const { useStoreRef, ...rest } = s;
-        //   useStoreRef(this, rest);
-        // });
-// 这里调用
-console.debug('onShow')
+        console.debug("onShow");
+        updateStoreState();
+
         globalOptions?.onLoad?.call(this, {});
         options?.onLoad?.call(this, {});
       },
-      onUnload() {},
+      onUnload() {
+        clearStoreDep();
+        console.debug("onUnload");
+      },
     };
 
-    // const hooks = [
-    //   "onReady",
-    //   "onHide",
-    //   "onPullDownRefresh",
-    //   "onReachBottom",
-    //   "onPageScroll",
-    //   "onResize",
-    //   "onTabItemTap",
-    // ];
-    // newOptions = mixinHooks(hooks, newOptions, globalOptions, options);
+    const hooks = [
+      "onReady",
+      "onHide",
+      "onPullDownRefresh",
+      "onReachBottom",
+      "onPageScroll",
+      "onResize",
+      "onTabItemTap",
+    ];
+    newOptions = mixinHooks(hooks, newOptions, globalOptions, options);
 
-    OriginPage(newOptions);
+    return OriginPage(newOptions);
   };
 }
 
-export function proxyComponent(globalOptions = {}) {
+export function proxyComponent(globalOptions: ComponentOptions) {
   setTip("isProxyComponent");
 
-  // const OriginComponent = Component;
-  // Component = function (options) {
-  //   let newOptions = {
-  //     ...globalOptions,
-  //     ...options,
-  //     attached() {
-  //       const { useStoreRef, mapState, mapActions, watch } = options;
-  //       if (useStoreRef) {
-  //         useStoreRef(this, mapState, mapActions, watch);
-  //       }
+  const OriginComponent = Component;
+  Component = function (options: ComponentNewOptions) {
+    let newOptions: ComponentOptions = {
+      ...globalOptions,
+      ...options,
+      attached() {
+        this.route = getCurrentPagePath();
+        const { stores } = options;
+        callUseStoreRef(this, stores);
 
-  //       options?.attached?.call(this, o);
-  //       globalOptions?.attached?.call(this, o);
-  //     },
-  //     detached() {
-  //       if (options.useStoreRef) {
-  //         this.data.store.cancelUse(this);
-  //       }
-  //       options?.detached?.call(this, o);
-  //       globalOptions?.detached?.call(this, o);
-  //     },
-  //     lifetimes: {
-  //       attached() {
-  //         const { useStoreRef, mapState, mapActions, watch } = options;
-  //         if (useStoreRef) {
-  //           useStoreRef(this, mapState, mapActions, watch);
-  //         }
+        options?.attached?.call(this);
+        globalOptions?.attached?.call(this);
+      },
+      detached() {
+        options?.detached?.call(this);
+        globalOptions?.detached?.call(this);
+      },
+      lifetimes: {
+        attached() {
+          this.route = getCurrentPagePath();
 
-  //         options?.lifetimes?.attached?.call(this, o);
-  //         globalOptions?.lifetimes?.attached?.call(this, o);
-  //       },
-  //       detached() {
-  //         if (options.useStoreRef) {
-  //           this.data.store.cancelUse(this);
-  //         }
-  //         options?.lifetimes?.detached?.call(this, o);
-  //         globalOptions?.lifetimes?.detached?.call(this, o);
-  //       },
-  //     },
-  //   };
+          const { stores } = options;
+          stores?.forEach((s) => {
+            const { useStoreRef, ...rest } = s;
+            useStoreRef(this, rest);
+          });
 
-  //   const hooks = [
-  //     "created",
-  //     "ready",
-  //     "moved",
-  //     "error",
-  //     "lifetimes.created",
-  //     "lifetimes.ready",
-  //     "lifetimes.moved",
-  //     "lifetimes.error",
-  //     "pageLifetimes.show",
-  //     "pageLifetimes.hide",
-  //     "pageLifetimes.resize",
-  //   ];
-  //   newOptions =  mixinHooks(hooks, newOptions, globalOptions, options);
+          options?.lifetimes?.attached?.call(this);
+          globalOptions?.lifetimes?.attached?.call(this);
+        },
+        detached() {
+          options?.lifetimes?.detached?.call(this);
+          globalOptions?.lifetimes?.detached?.call(this);
+        },
+      },
+    };
 
-  //   OriginComponent(newOptions);
-  // };
+    const hooks = [
+      "created",
+      "ready",
+      "moved",
+      "error",
+      "lifetimes.created",
+      "lifetimes.ready",
+      "lifetimes.moved",
+      "lifetimes.error",
+      "pageLifetimes.show",
+      "pageLifetimes.hide",
+      "pageLifetimes.resize",
+    ];
+    newOptions = mixinHooks(hooks, newOptions, globalOptions, options);
+
+    return OriginComponent(newOptions);
+  };
 }
 
-// type BaseOptions = Record<string, any>;
+type BaseOptions = Record<string, any>;
 
-// /** 全局混入hook */
-// function mixinHooks(
-//   hooks: string[],
-//   newOptions: BaseOptions,
-//   globalOptions: BaseOptions,
-//   options: BaseOptions
-// ) {
+/** 全局混入hook */
+function mixinHooks(
+  hooks: string[],
+  newOptions: BaseOptions,
+  globalOptions: BaseOptions,
+  options: BaseOptions
+) {
+  const newO = deepClone(newOptions);
 
-//   const newO = deepClone(newOptions);
+  hooks.forEach((name) => {
+    // 这里分割的原因是要注入 lifetimes.created 这种 hook
+    const paths = name.split(".");
+    const len = paths.length;
 
-//   hooks.forEach((name) => {
-//     // 这里分割的原因是要注入 lifetimes.created 这种 hook
-//     const paths = name.split(".");
-//     const len = paths.length;
+    if (len === 1) {
+      newO[paths[0]] = function () {
+        globalOptions?.[paths[0]]?.call(this, ...arguments);
+        options?.[paths[0]]?.call(this, ...arguments);
+      };
+    } else {
+      newO[paths[0]] = { ...newO?.[paths[0]] };
+      // pageLifetimes 的生命周期会覆盖this上的生命周期
+      if (
+        globalOptions?.[paths[0]]?.[paths[1]] ||
+        options?.[paths[0]]?.[paths[1]]
+      ) {
+        newO[paths[0]][paths[1]] = function () {
+          globalOptions?.[paths[0]]?.[paths[1]]?.call(this, ...arguments);
+          options?.[paths[0]]?.[paths[1]]?.call(this, ...arguments);
+        };
+      }
+    }
+  });
 
-//     if (len === 1) {
-//       newO[paths[0]] = function () {
-//         globalOptions?.[paths[0]]?.call(this, o);
-//         options?.[paths[0]]?.call(this, o);
-//       };
-//     } else {
-//       newO[paths[0]] = { ...newO?.[paths[0]] };
-//       // pageLifetimes 的生命周期会覆盖this上的生命周期
-//       if (
-//         globalOptions?.[paths[0]]?.[paths[1]] ||
-//         options?.[paths[0]]?.[paths[1]]
-//       ) {
-//         newO[paths[0]][paths[1]] = function () {
-//           globalOptions?.[paths[0]]?.[paths[1]]?.call(this, o);
-//           options?.[paths[0]]?.[paths[1]]?.call(this, o);
-//         };
-//       }
-//     }
-//   });
-
-//   return newO;
-// }
+  return newO;
+}

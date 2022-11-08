@@ -1,1 +1,6 @@
-<view>hello, world</view>
+<view>
+  <view>hello, world</view>
+
+  <navigator url="/pages/log/log" open-type="redirect">调整</navigator>
+  <hello />
+</view>

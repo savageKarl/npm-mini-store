@@ -23,6 +23,16 @@ export type PageNewOptions = Partial<PageOptions> & {
   stores?: StoreOptions;
 };
 
+export type ComponentOptions = WechatMiniprogram.Component.Options<
+  {},
+  {},
+  {},
+  { route: string }
+>;
+export type ComponentNewOptions = Partial<ComponentOptions> & {
+  stores?: StoreOptions;
+};
+
 export type Callback = (...args: any) => any;
 export type DepsType = Map<any, Set<Callback>>;
 export type StateType = Record<string | number | symbol, unknown>;

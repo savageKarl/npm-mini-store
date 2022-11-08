@@ -1,5 +1,6 @@
 /// <reference types="miniprogram-api-typings" />
 /// <reference types="miniprogram-api-typings" />
+/// <reference types="miniprogram-api-typings" />
 export declare type BaseStoreOptionItem = {
     storeKey: string;
     useStoreRef: UseStoreRef;
@@ -18,6 +19,12 @@ export declare type AppNewOptions = Partial<AppOptions> & {
 };
 export declare type PageOptions = WechatMiniprogram.Page.Options<{}, {}>;
 export declare type PageNewOptions = Partial<PageOptions> & {
+    stores?: StoreOptions;
+};
+export declare type ComponentOptions = WechatMiniprogram.Component.Options<{}, {}, {}, {
+    route: string;
+}>;
+export declare type ComponentNewOptions = Partial<ComponentOptions> & {
     stores?: StoreOptions;
 };
 export declare type Callback = (...args: any) => any;
