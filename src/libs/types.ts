@@ -15,11 +15,17 @@ export type AppOptions = WechatMiniprogram.App.Option & { type: string };
 export type AppNewOptions = Partial<AppOptions> & {
   stores?: BaseStoreOptions;
 };
+export type AppInstance = WechatMiniprogram.App.Instance<{}>;
+
+export type CustomInstance = {
+  watchValue: Record<string, any>;
+};
 
 export type PageOptions = WechatMiniprogram.Page.Options<{}, {}>;
 export type PageNewOptions = Partial<PageOptions> & {
   stores?: StoreOptions;
 };
+export type PageInstance = WechatMiniprogram.Page.Instance<{}, CustomInstance>;
 
 export type ComponentOptions = WechatMiniprogram.Component.Options<
   {},
@@ -30,6 +36,12 @@ export type ComponentOptions = WechatMiniprogram.Component.Options<
 export type ComponentNewOptions = Partial<ComponentOptions> & {
   stores?: StoreOptions;
 };
+export type ComponentInstance = WechatMiniprogram.Component.Instance<
+  {},
+  {},
+  {},
+  CustomInstance
+>;
 
 export type Callback = (...args: any) => any;
 export type DepsType = Map<any, Set<Callback>>;
@@ -64,12 +76,15 @@ export type Store<S, A, C> = S &
   };
 
 export type UseStoreRef = {
-  (instance: any, options: any): any;
+  (
+    instance: AppInstance | PageInstance | ComponentInstance,
+    options: Omit<BaseStoreOptionItem, "useStoreRef">
+  ): any;
 };
 
 export type DepStack = Callback[];
 
 export type DepStateWithWatch = (StoreOptionItem & {
-  instance: any;
+  instance: PageInstance | ComponentInstance;
   store: any;
 })[];

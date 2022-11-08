@@ -181,7 +181,7 @@ function mixinHooks(
 
     if (len === 1) {
       newO[paths[0]] = function () {
-        globalOptions?.[paths[0]]?.call(this, ...arguments);
+        globalOptions?.[paths[0] as keyof typeof globalOptions ]?.call(this, ...arguments);
         options?.[paths[0]]?.call(this, ...arguments);
       };
     } else {

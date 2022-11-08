@@ -17,16 +17,22 @@ export declare type AppOptions = WechatMiniprogram.App.Option & {
 export declare type AppNewOptions = Partial<AppOptions> & {
     stores?: BaseStoreOptions;
 };
+export declare type AppInstance = WechatMiniprogram.App.Instance<{}>;
+export declare type CustomInstance = {
+    watchValue: Record<string, any>;
+};
 export declare type PageOptions = WechatMiniprogram.Page.Options<{}, {}>;
 export declare type PageNewOptions = Partial<PageOptions> & {
     stores?: StoreOptions;
 };
+export declare type PageInstance = WechatMiniprogram.Page.Instance<{}, CustomInstance>;
 export declare type ComponentOptions = WechatMiniprogram.Component.Options<{}, {}, {}, {
     route: string;
 }>;
 export declare type ComponentNewOptions = Partial<ComponentOptions> & {
     stores?: StoreOptions;
 };
+export declare type ComponentInstance = WechatMiniprogram.Component.Instance<{}, {}, {}, CustomInstance>;
 export declare type Callback = (...args: any) => any;
 export declare type DepsType = Map<any, Set<Callback>>;
 export declare type StateType = Record<string | number | symbol, unknown>;
@@ -45,10 +51,10 @@ export declare type Store<S, A, C> = S & A & StoreWithGetters<C> & {
     useWatcher<K extends keyof S>(k: K, fn: (oldV: S[K], V: S[K]) => any): any;
 };
 export declare type UseStoreRef = {
-    (instance: any, options: any): any;
+    (instance: AppInstance | PageInstance | ComponentInstance, options: Omit<BaseStoreOptionItem, "useStoreRef">): any;
 };
 export declare type DepStack = Callback[];
 export declare type DepStateWithWatch = (StoreOptionItem & {
-    instance: any;
+    instance: PageInstance | ComponentInstance;
     store: any;
 })[];

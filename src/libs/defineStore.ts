@@ -1,7 +1,4 @@
-import {
-  isObject,
-  deepClone,
-} from "@savage181855/utils";
+import { isObject, deepClone } from "@savage181855/utils";
 
 import type {
   BaseStoreOptionItem,
@@ -28,7 +25,7 @@ export function updateStoreState() {
     // debugger;
     const data: Record<string, any> = {};
     mapState?.forEach((key) => {
-      if (instance.data[key] !== store[key]) {
+      if (instance.data[key as keyof typeof instance.data] !== store[key]) {
         data[key] = deepClone(store[key]);
       }
     });
@@ -126,20 +123,18 @@ export function defineStore<
 
     const o = options as StoreOptionItem;
 
-
     const stateKeys = Object.keys(state);
     if (o.mapState) {
       o.mapState.forEach((key) => {
         if (!stateKeys.includes(key)) {
           console.error(
             `msg: mapState "${key}" not in ${o.storeKey};\n\n` +
-            `info: pagePath: ${instance.route}, nodeId: "${instance.__wxExparserNodeId__}";\n`
+              `info: pagePath: ${instance.route}, nodeId: "${instance.__wxExparserNodeId__}";\n`
           );
           return;
         }
       });
     }
-
 
     if (o.watch) {
       const watchValue: StateType = {};
@@ -147,7 +142,7 @@ export function defineStore<
         if (!stateKeys.includes(key)) {
           console.error(
             `msg: watch "${key}" not in ${o.storeKey};\n\n` +
-            `info: pagePath: ${instance.route}, nodeId: "${instance.__wxExparserNodeId__}";\n`
+              `info: pagePath: ${instance.route}, nodeId: "${instance.__wxExparserNodeId__}";\n`
           );
           return;
         }
