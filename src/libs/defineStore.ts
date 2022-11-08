@@ -113,39 +113,4 @@ export function defineStore(options) {
   };
 }
 
-// 单独写兄弟组件传值api是为了关注点分离
-// 只能用于组件通信，除此之外全部用store
-// const brotherPassValue = (function () {
-//   const obj = {};
-//   installEventerCenter(obj);
 
-//   return {
-//     passValue(name, value) {
-//       obj.publish(name, value);
-//     },
-//     receiveValue(_this, name, fn = (val) => val, isMapState = true) {
-//       let handle;
-//       // 是否映射到data里面
-//       if (isMapState) {
-//         _this.setData({ [name]: "" });
-//         handle = (value) => {
-//           _this.setData({ [name]: fn(value) });
-//         };
-//       } else {
-//         handle = (name) => {
-//           fn(name);
-//         };
-//       }
-
-//       obj.subscribe(name, handle);
-//     },
-//     // 组件劫持不了生命周期，无法自动注入，需要手动注入
-//     cancelReceive(name) {
-//       obj.remove(name);
-//     },
-//   };
-// })();
-
-// const { passValue, receiveValue, cancelReceive } = brotherPassValue;
-
-// export { passValue, receiveValue, cancelReceive };

@@ -1,3 +1,5 @@
+/// <reference path="./Function.d.ts" />
+
 // the third-party lib has no declaration file, so that no error is reported for the type
 declare module "gulp-clean" {
   export default function a(...args: any): any;
