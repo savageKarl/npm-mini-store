@@ -1,17 +1,9 @@
 import {
-  installEventCenter,
   isObject,
-  hasChanged,
   deepClone,
-  get,
 } from "@savage181855/utils";
 
 import type {
-  Store,
-  UseStoreRef,
-  BaseStoreOptions,
-  AppOptions,
-  AppNewOptions,
   BaseStoreOptionItem,
   StateType,
   Callback,
@@ -37,7 +29,7 @@ export function updateStoreState() {
     const data: Record<string, any> = {};
     mapState?.forEach((key) => {
       if (instance.data[key] !== store[key]) {
-        data[key] = store[key];
+        data[key] = deepClone(store[key]);
       }
     });
     instance.setData(data);
@@ -46,6 +38,7 @@ export function updateStoreState() {
       Object.keys(watch).forEach((key) => {
         if (instance.watchValue[key] !== store[key]) {
           watch[key](instance.watchValue[key], store[key]);
+          instance.watchValue[key] = deepClone(store[key]);
         }
       });
     }
@@ -158,7 +151,7 @@ export function defineStore<
           );
           return;
         }
-        watchValue[key] = store[key];
+        watchValue[key] = deepClone(store[key]);
       });
       instance.watchValue = watchValue;
     }

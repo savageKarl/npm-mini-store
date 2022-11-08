@@ -87,7 +87,7 @@ function updateStoreState() {
         const data = {};
         mapState === null || mapState === void 0 ? void 0 : mapState.forEach((key) => {
             if (instance.data[key] !== store[key]) {
-                data[key] = store[key];
+                data[key] = dist_2(store[key]);
             }
         });
         instance.setData(data);
@@ -95,6 +95,7 @@ function updateStoreState() {
             Object.keys(watch).forEach((key) => {
                 if (instance.watchValue[key] !== store[key]) {
                     watch[key](instance.watchValue[key], store[key]);
+                    instance.watchValue[key] = dist_2(store[key]);
                 }
             });
         }
@@ -176,7 +177,7 @@ function defineStore(options) {
                         `info: pagePath: ${instance.route}, nodeId: "${instance.__wxExparserNodeId__}";\n`);
                     return;
                 }
-                watchValue[key] = store[key];
+                watchValue[key] = dist_2(store[key]);
             });
             instance.watchValue = watchValue;
         }

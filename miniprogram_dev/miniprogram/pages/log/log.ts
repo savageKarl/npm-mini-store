@@ -1,6 +1,16 @@
-// pages/log/log.ts
+import { useAppStore } from "../../store";
 Page({
-
+  stores: [
+    {
+      storeKey: "appStore",
+      useStoreRef: useAppStore,
+      mapState: ["count"],
+    },
+    {
+      storeKey: "indexStore",
+      useStoreRef: useAppStore,
+    },
+  ],
   /**
    * 页面的初始数据
    */

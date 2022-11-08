@@ -1,2 +1,5 @@
+<view>
 <!--pages/log/log.wxml-->
 <text>pages/log/log.wxml</text>
+<view>{{count}}</view>
+</view>
