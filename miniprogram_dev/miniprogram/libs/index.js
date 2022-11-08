@@ -36,7 +36,7 @@ dist.debounce;
 var dist_2 = dist.deepClone;
 dist.get;
 dist.getSingle;
-var dist_5 = dist.hasChanged;
+dist.hasChanged;
 dist.installEventCenter;
 var dist_7 = dist.isObject;
 dist.isSameDeep;
@@ -78,7 +78,28 @@ function updateStoreState() {
     const path = getCurrentPagePath();
     if (!path)
         return;
-    console.debug("在这里进行diff， setData 和 watch", depens, depens[path]);
+    const stores = depens[path];
+    if (!stores)
+        return;
+    stores.forEach((s) => {
+        const { mapState, instance, store, watch } = s;
+        // debugger;
+        const data = {};
+        mapState === null || mapState === void 0 ? void 0 : mapState.forEach((key) => {
+            if (instance.data[key] !== store[key]) {
+                data[key] = store[key];
+            }
+        });
+        instance.setData(data);
+        if (watch) {
+            Object.keys(watch).forEach((key) => {
+                if (instance.watchValue[key] !== store[key]) {
+                    watch[key](instance.watchValue[key], store[key]);
+                }
+            });
+        }
+    });
+    // console.debug("在这里进行diff， setData 和 watch", depens, depens[path]);
 }
 function clearStoreDep() {
     const path = getCurrentPagePath();
@@ -87,7 +108,7 @@ function clearStoreDep() {
 }
 function removeStoreDep(instance) {
     const path = getCurrentPagePath();
-    depens[path] = depens[path].filter(item => item.instance !== instance);
+    depens[path] = depens[path].filter((item) => item.instance !== instance);
     console.debug(depens, depens[path]);
 }
 function createReactive(target) {
@@ -95,23 +116,18 @@ function createReactive(target) {
     const obj = new Proxy(target, {
         get(target, key, receiver) {
             const res = Reflect.get(target, key, receiver);
-            // debugger;
             if (dist_7(res))
                 return createReactive(res);
             return res;
         },
         set(target, key, value, receiver) {
-            const oldV = dist_2(target[key]);
             const res = Reflect.set(target, key, value, receiver);
-            // debugger;
-            // 不搞根据属性收集依赖那一套了，store，一变化，拿到当前route，然后区分是哪一个store，再diff mapState和 watch
-            if (dist_5(oldV, value)) ;
+            updateStoreState();
             return res;
         },
     });
     return obj;
 }
-/** convert actions to solve the problem of this loss in store actions */
 function setupActions(plainStore, proxyStore) {
     for (let k in plainStore) {
         if (typeof plainStore[k] === "function") {
@@ -119,7 +135,6 @@ function setupActions(plainStore, proxyStore) {
         }
     }
 }
-/** install the patch method to the store */
 function setupPatchOfStore(store) {
     store.patch = function (val) {
         if (typeof val === "object") {
@@ -133,12 +148,8 @@ function setupPatchOfStore(store) {
     };
 }
 function defineStore(options) {
-    const update = Symbol("update");
-    // 给store设置一个update的方法，这样子proxy set 改变的时候
-    const plainStore = Object.assign(Object.assign(Object.assign({}, options.state), options.actions), { [update]() {
-            // proxy set 以及page show 生命周期会调用这个方法
-            // 这里逻辑，获取当前 page route，然后去  depens，里面拿当前page的所有依赖，mapState，watch，然后diff，再进行setData或者调用回调
-        } });
+    const state = options.state;
+    const plainStore = Object.assign(Object.assign({}, options.state), options.actions);
     const store = createReactive(plainStore);
     setupActions(plainStore, store);
     setupPatchOfStore(store);
@@ -146,8 +157,23 @@ function defineStore(options) {
         instance[options.storeKey] = store;
         if (instance.type === "app")
             return;
+        const o = options;
+        if (o.watch) {
+            const stateKeys = Object.keys(state);
+            const watchValue = {};
+            Object.keys(o.watch).forEach((key) => {
+                if (!stateKeys.includes(key)) {
+                    console.error(`msg: key "${key}" not in ${o.storeKey};\n` +
+                        `info: pagePath: ${instance.route}, nodeId: "${instance.__wxExparserNodeId__}";`);
+                    return;
+                }
+                watchValue[key] = store[key];
+            });
+            instance.watchValue = watchValue;
+        }
         depens[instance.route] = depens[instance.route] || [];
-        depens[instance.route].push(Object.assign({ instance }, options));
+        depens[instance.route].push(Object.assign(Object.assign({}, o), { instance,
+            store }));
     };
 }
 
@@ -176,7 +202,8 @@ function proxyPage(globalOptions) {
     setTip("isProxyPage");
     const OriginPage = Page;
     Page = function (options) {
-        let newOptions = Object.assign(Object.assign(Object.assign({}, globalOptions), options), { onLoad(o) {
+        const rest = __rest(options, ["stores"]);
+        let newOptions = Object.assign(Object.assign(Object.assign({}, globalOptions), rest), { onLoad(o) {
                 var _a, _b;
                 const { stores } = options;
                 callUseStoreRef(this, stores);
@@ -185,14 +212,15 @@ function proxyPage(globalOptions) {
             },
             onShow() {
                 var _a, _b;
-                console.debug("onShow");
                 updateStoreState();
-                (_a = globalOptions === null || globalOptions === void 0 ? void 0 : globalOptions.onLoad) === null || _a === void 0 ? void 0 : _a.call(this, {});
-                (_b = options === null || options === void 0 ? void 0 : options.onLoad) === null || _b === void 0 ? void 0 : _b.call(this, {});
+                (_a = globalOptions === null || globalOptions === void 0 ? void 0 : globalOptions.onShow) === null || _a === void 0 ? void 0 : _a.call(this);
+                (_b = options === null || options === void 0 ? void 0 : options.onShow) === null || _b === void 0 ? void 0 : _b.call(this);
             },
             onUnload() {
+                var _a, _b;
                 clearStoreDep();
-                console.debug("onUnload");
+                (_a = globalOptions === null || globalOptions === void 0 ? void 0 : globalOptions.onUnload) === null || _a === void 0 ? void 0 : _a.call(this);
+                (_b = options === null || options === void 0 ? void 0 : options.onUnload) === null || _b === void 0 ? void 0 : _b.call(this);
             } });
         const hooks = [
             "onReady",
@@ -211,7 +239,8 @@ function proxyComponent(globalOptions) {
     setTip("isProxyComponent");
     const OriginComponent = Component;
     Component = function (options) {
-        let newOptions = Object.assign(Object.assign(Object.assign({}, globalOptions), options), { attached() {
+        const rest = __rest(options, ["stores"]);
+        let newOptions = Object.assign(Object.assign(Object.assign({}, globalOptions), rest), { attached() {
                 var _a, _b;
                 this.route = getCurrentPagePath();
                 const { stores } = options;
@@ -221,6 +250,7 @@ function proxyComponent(globalOptions) {
             },
             detached() {
                 var _a, _b;
+                removeStoreDep(this);
                 (_a = options === null || options === void 0 ? void 0 : options.detached) === null || _a === void 0 ? void 0 : _a.call(this);
                 (_b = globalOptions === null || globalOptions === void 0 ? void 0 : globalOptions.detached) === null || _b === void 0 ? void 0 : _b.call(this);
             }, lifetimes: {
@@ -228,15 +258,13 @@ function proxyComponent(globalOptions) {
                     var _a, _b, _c, _d;
                     this.route = getCurrentPagePath();
                     const { stores } = options;
-                    stores === null || stores === void 0 ? void 0 : stores.forEach((s) => {
-                        const { useStoreRef } = s, rest = __rest(s, ["useStoreRef"]);
-                        useStoreRef(this, rest);
-                    });
+                    callUseStoreRef(this, stores);
                     (_b = (_a = options === null || options === void 0 ? void 0 : options.lifetimes) === null || _a === void 0 ? void 0 : _a.attached) === null || _b === void 0 ? void 0 : _b.call(this);
                     (_d = (_c = globalOptions === null || globalOptions === void 0 ? void 0 : globalOptions.lifetimes) === null || _c === void 0 ? void 0 : _c.attached) === null || _d === void 0 ? void 0 : _d.call(this);
                 },
                 detached() {
                     var _a, _b, _c, _d;
+                    removeStoreDep(this);
                     (_b = (_a = options === null || options === void 0 ? void 0 : options.lifetimes) === null || _a === void 0 ? void 0 : _a.detached) === null || _b === void 0 ? void 0 : _b.call(this);
                     (_d = (_c = globalOptions === null || globalOptions === void 0 ? void 0 : globalOptions.lifetimes) === null || _c === void 0 ? void 0 : _c.detached) === null || _d === void 0 ? void 0 : _d.call(this);
                 },

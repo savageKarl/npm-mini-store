@@ -21,7 +21,7 @@ import type {
 
 import { setTip } from "./tips";
 
-import { updateStoreState, clearStoreDep } from "./defineStore";
+import { updateStoreState, clearStoreDep, removeStoreDep } from "./defineStore";
 
 import { getCurrentPagePath } from "./utils";
 
@@ -48,6 +48,7 @@ export function proxyApp() {
         this.type = "app";
         const { stores } = options;
         callUseStoreRef(this, stores);
+
         options?.onLaunch?.call(this, o);
       },
     } as AppOptions;
@@ -61,9 +62,10 @@ export function proxyPage(globalOptions: PageOptions) {
 
   const OriginPage = Page;
   Page = function (options: PageNewOptions) {
+    const { stores, ...rest } = options;
     let newOptions: PageOptions = {
       ...globalOptions,
-      ...options,
+      ...rest,
       onLoad(o) {
         const { stores } = options;
         callUseStoreRef(this, stores);
@@ -72,15 +74,15 @@ export function proxyPage(globalOptions: PageOptions) {
         options?.onLoad?.call(this, o);
       },
       onShow() {
-        console.debug("onShow");
         updateStoreState();
 
-        globalOptions?.onLoad?.call(this, {});
-        options?.onLoad?.call(this, {});
+        globalOptions?.onShow?.call(this);
+        options?.onShow?.call(this);
       },
       onUnload() {
         clearStoreDep();
-        console.debug("onUnload");
+        globalOptions?.onUnload?.call(this);
+        options?.onUnload?.call(this);
       },
     };
 
@@ -104,9 +106,11 @@ export function proxyComponent(globalOptions: ComponentOptions) {
 
   const OriginComponent = Component;
   Component = function (options: ComponentNewOptions) {
+    const { stores, ...rest } = options;
+
     let newOptions: ComponentOptions = {
       ...globalOptions,
-      ...options,
+      ...rest,
       attached() {
         this.route = getCurrentPagePath();
         const { stores } = options;
@@ -116,23 +120,24 @@ export function proxyComponent(globalOptions: ComponentOptions) {
         globalOptions?.attached?.call(this);
       },
       detached() {
+        removeStoreDep(this);
+
         options?.detached?.call(this);
         globalOptions?.detached?.call(this);
       },
       lifetimes: {
         attached() {
           this.route = getCurrentPagePath();
-
           const { stores } = options;
-          stores?.forEach((s) => {
-            const { useStoreRef, ...rest } = s;
-            useStoreRef(this, rest);
-          });
+
+          callUseStoreRef(this, stores);
 
           options?.lifetimes?.attached?.call(this);
           globalOptions?.lifetimes?.attached?.call(this);
         },
         detached() {
+          removeStoreDep(this);
+
           options?.lifetimes?.detached?.call(this);
           globalOptions?.lifetimes?.detached?.call(this);
         },

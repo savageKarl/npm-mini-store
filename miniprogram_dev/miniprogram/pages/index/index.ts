@@ -11,9 +11,9 @@ Page({
     {
       storeKey: "appStore",
       useStoreRef: useAppStore,
-      mapState: ["navBarHeight", "shopList", "shopIndex", "openid"],
+      mapState: ["count"],
       watch: {
-        shopIndex(oldValue: any, value: any) {},
+        count(oldValue: any, value: any) {},
       },
     },
     {
@@ -23,7 +23,7 @@ Page({
   ],
   data: {},
   onLoad() {
-    // console.debug(this)
+    console.debug(this, '执行')
     // console.debug(this.route);
   },
 });

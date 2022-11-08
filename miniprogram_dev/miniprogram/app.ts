@@ -4,7 +4,7 @@ import { useAppStore } from "./store";
 
 proxyApp();
 proxyPage({});
-proxyComponent();
+proxyComponent({});
 
 const stores = [
   {

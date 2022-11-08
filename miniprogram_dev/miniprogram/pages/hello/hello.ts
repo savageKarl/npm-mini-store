@@ -44,3 +44,9 @@ Component({
       console.debug(this);
     }}
 })
+
+const a = {name: 'a'}
+
+
+const b = new Proxy(a, {})
+

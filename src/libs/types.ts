@@ -6,8 +6,8 @@ export type BaseStoreOptionItem = {
 };
 
 export type StoreOptionItem = BaseStoreOptionItem & {
-  mapState: string[];
-  watch: Record<string, () => any>;
+  mapState?: string[];
+  watch?: Record<string, (oldV: any, v: any) => any>;
 };
 
 export type BaseStoreOptions = BaseStoreOptionItem[];
@@ -71,6 +71,7 @@ export type UseStoreRef = {
 
 export type DepStack = Callback[];
 
-export type DepStateWithWatch = ((BaseStoreOptionItem | StoreOptionItem) & {
+export type DepStateWithWatch = (StoreOptionItem & {
   instance: any;
+  store: any;
 })[];
