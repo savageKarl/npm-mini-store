@@ -1,162 +1,195 @@
-type PageOptions = WechatMiniprogram.Page.Options<any, any>;
-type PageNewOptions = PageOptions & { useStoreRef: any };
+import {
+  installEventCenter,
+  isObject,
+  hasChanged,
+  deepClone,
+  get,
+} from "@savage181855/utils";
+
+import type {
+  Store,
+  UseStoreRef,
+  BaseStoreOptions,
+  AppOptions,
+  AppNewOptions,
+  PageOptions,
+  PageNewOptions,
+} from "./types";
+
+import { setTip } from "./tips";
+
+export function proxyApp() {
+  setTip("isProxyApp");
+
+  const originApp = App;
+
+  App = function (options: AppNewOptions) {
+    const { stores, ...rest } = options;
+    const newOptions = {
+      ...rest,
+      onLaunch(o: WechatMiniprogram.App.LaunchShowOption) {
+        this.type = "app";
+        const { stores } = options;
+
+        stores?.forEach((s) => {
+          const { useStoreRef, ...rest } = s;
+          useStoreRef(this, rest);
+        });
+
+        options?.onLaunch?.call(this, o);
+      },
+    } as AppOptions;
+
+    originApp(newOptions);
+  } as any;
+}
 
 export function proxyPage(globalOptions: PageOptions) {
-  isProxyPage = true;
+  setTip("isProxyPage");
+
   const OriginPage = Page;
   Page = function (options: PageNewOptions) {
-    const newOptions: PageOptions = {
+    let newOptions: PageOptions = {
       ...globalOptions,
       ...options,
-      onLoad() {
-        // useStoreRef 是 store 的函数引用，不能传函数调用进来
-        const { useStoreRef, mapState, mapActions, watch } = options;
-        if (useStoreRef) {
-          useStoreRef(this, mapState, mapActions, watch);
-        }
+      onLoad(o) {
+        const { stores } = options;
+        stores?.forEach((s) => {
+          const { useStoreRef, ...rest } = s;
+          useStoreRef(this, rest);
+        });
 
-        globalOptions?.onLoad?.call(this, ...arguments);
-        options?.onLoad?.call(this, ...arguments);
+        globalOptions?.onLoad?.call(this, o);
+        options?.onLoad?.call(this, o);
       },
+      onShow() {
+        // const { stores } = options;
+        // stores?.forEach((s) => {
+        //   const { useStoreRef, ...rest } = s;
+        //   useStoreRef(this, rest);
+        // });
+// 这里调用
+console.debug('onShow')
+        globalOptions?.onLoad?.call(this, {});
+        options?.onLoad?.call(this, {});
+      },
+      onUnload() {},
     };
 
-    const hooks = [
-      "onShow",
-      "onReady",
-      "onHide",
-      "onUnload",
-      "onPullDownRefresh",
-      "onReachBottom",
-      "onPageScroll",
-      "onResize",
-      "onTabItemTap",
-    ];
-    mixinHooks(hooks, newOptions, globalOptions, options);
+    // const hooks = [
+    //   "onReady",
+    //   "onHide",
+    //   "onPullDownRefresh",
+    //   "onReachBottom",
+    //   "onPageScroll",
+    //   "onResize",
+    //   "onTabItemTap",
+    // ];
+    // newOptions = mixinHooks(hooks, newOptions, globalOptions, options);
 
     OriginPage(newOptions);
   };
 }
 
 export function proxyComponent(globalOptions = {}) {
-  isProxyComponent = true;
-  const OriginComponent = Component;
-  Component = function (options) {
-    const newOptions = {
-      ...globalOptions,
-      ...options,
-      attached() {
-        const { useStoreRef, mapState, mapActions, watch } = options;
-        if (useStoreRef) {
-          useStoreRef(this, mapState, mapActions, watch);
-        }
+  setTip("isProxyComponent");
 
-        options?.attached?.call(this, ...arguments);
-        globalOptions?.attached?.call(this, ...arguments);
-      },
-      detached() {
-        if (options.useStoreRef) {
-          this.data.store.cancelUse(this);
-        }
-        options?.detached?.call(this, ...arguments);
-        globalOptions?.detached?.call(this, ...arguments);
-      },
-      lifetimes: {
-        attached() {
-          const { useStoreRef, mapState, mapActions, watch } = options;
-          if (useStoreRef) {
-            useStoreRef(this, mapState, mapActions, watch);
-          }
+  // const OriginComponent = Component;
+  // Component = function (options) {
+  //   let newOptions = {
+  //     ...globalOptions,
+  //     ...options,
+  //     attached() {
+  //       const { useStoreRef, mapState, mapActions, watch } = options;
+  //       if (useStoreRef) {
+  //         useStoreRef(this, mapState, mapActions, watch);
+  //       }
 
-          options?.lifetimes?.attached?.call(this, ...arguments);
-          globalOptions?.lifetimes?.attached?.call(this, ...arguments);
-        },
-        detached() {
-          if (options.useStoreRef) {
-            this.data.store.cancelUse(this);
-          }
-          options?.lifetimes?.detached?.call(this, ...arguments);
-          globalOptions?.lifetimes?.detached?.call(this, ...arguments);
-        },
-      },
-    };
+  //       options?.attached?.call(this, o);
+  //       globalOptions?.attached?.call(this, o);
+  //     },
+  //     detached() {
+  //       if (options.useStoreRef) {
+  //         this.data.store.cancelUse(this);
+  //       }
+  //       options?.detached?.call(this, o);
+  //       globalOptions?.detached?.call(this, o);
+  //     },
+  //     lifetimes: {
+  //       attached() {
+  //         const { useStoreRef, mapState, mapActions, watch } = options;
+  //         if (useStoreRef) {
+  //           useStoreRef(this, mapState, mapActions, watch);
+  //         }
 
-    const hooks = [
-      "created",
-      "ready",
-      "moved",
-      "error",
-      "lifetimes.created",
-      "lifetimes.ready",
-      "lifetimes.moved",
-      "lifetimes.error",
-      "pageLifetimes.show",
-      "pageLifetimes.hide",
-      "pageLifetimes.resize",
-    ];
-    mixinHooks(hooks, newOptions, globalOptions, options);
+  //         options?.lifetimes?.attached?.call(this, o);
+  //         globalOptions?.lifetimes?.attached?.call(this, o);
+  //       },
+  //       detached() {
+  //         if (options.useStoreRef) {
+  //           this.data.store.cancelUse(this);
+  //         }
+  //         options?.lifetimes?.detached?.call(this, o);
+  //         globalOptions?.lifetimes?.detached?.call(this, o);
+  //       },
+  //     },
+  //   };
 
-    OriginComponent(newOptions);
-  };
+  //   const hooks = [
+  //     "created",
+  //     "ready",
+  //     "moved",
+  //     "error",
+  //     "lifetimes.created",
+  //     "lifetimes.ready",
+  //     "lifetimes.moved",
+  //     "lifetimes.error",
+  //     "pageLifetimes.show",
+  //     "pageLifetimes.hide",
+  //     "pageLifetimes.resize",
+  //   ];
+  //   newOptions =  mixinHooks(hooks, newOptions, globalOptions, options);
+
+  //   OriginComponent(newOptions);
+  // };
 }
 
-type AppOptions = WechatMiniprogram.App.Option;
-type AppNewOptions = PageOptions & { useStoreRef: any };
+// type BaseOptions = Record<string, any>;
 
-export function proxyApp(globalOptions: PageOptions) {
-  isProxyApp = true;
+// /** 全局混入hook */
+// function mixinHooks(
+//   hooks: string[],
+//   newOptions: BaseOptions,
+//   globalOptions: BaseOptions,
+//   options: BaseOptions
+// ) {
 
-  const originApp = App;
+//   const newO = deepClone(newOptions);
 
-  App = function (options: AppNewOptions) {
-    const newOptions: PageOptions = {
-      ...globalOptions,
-      ...options,
-      onLaunch(o: WechatMiniprogram.App.LaunchShowOption) {
-        const { useStoreRef } = options;
-        if (useStoreRef) {
-          useStoreRef(this);
-        }
+//   hooks.forEach((name) => {
+//     // 这里分割的原因是要注入 lifetimes.created 这种 hook
+//     const paths = name.split(".");
+//     const len = paths.length;
 
-        globalOptions?.onLaunch?.call(this, o);
-        options?.onLaunch?.call(this, o);
-      },
-    };
+//     if (len === 1) {
+//       newO[paths[0]] = function () {
+//         globalOptions?.[paths[0]]?.call(this, o);
+//         options?.[paths[0]]?.call(this, o);
+//       };
+//     } else {
+//       newO[paths[0]] = { ...newO?.[paths[0]] };
+//       // pageLifetimes 的生命周期会覆盖this上的生命周期
+//       if (
+//         globalOptions?.[paths[0]]?.[paths[1]] ||
+//         options?.[paths[0]]?.[paths[1]]
+//       ) {
+//         newO[paths[0]][paths[1]] = function () {
+//           globalOptions?.[paths[0]]?.[paths[1]]?.call(this, o);
+//           options?.[paths[0]]?.[paths[1]]?.call(this, o);
+//         };
+//       }
+//     }
+//   });
 
-    originApp(newOptions);
-  } as any;
-}
-
-type BaseOptions = Record<string, any>;
-
-/** 全局混入hook */
-function mixinHooks(
-  hooks: string[],
-  newOptions: BaseOptions,
-  globalOptions: BaseOptions,
-  options: BaseOptions
-) {
-  hooks.forEach((name) => {
-    // 这里分割的原因是要注入 lifetimes.created 这种 hook
-    const paths = name.split(".");
-    const len = paths.length;
-
-    if (len === 1) {
-      newOptions[paths[0]] = function () {
-        globalOptions?.[paths[0]]?.call(this, ...arguments);
-        options?.[paths[0]]?.call(this, ...arguments);
-      };
-    } else {
-      newOptions[paths[0]] = { ...newOptions?.[paths[0]] };
-      // pageLifetimes 的生命周期会覆盖this上的生命周期
-      if (
-        globalOptions?.[paths[0]]?.[paths[1]] ||
-        options?.[paths[0]]?.[paths[1]]
-      ) {
-        newOptions[paths[0]][paths[1]] = function () {
-          globalOptions?.[paths[0]]?.[paths[1]]?.call(this, ...arguments);
-          options?.[paths[0]]?.[paths[1]]?.call(this, ...arguments);
-        };
-      }
-    }
-  });
-}
+//   return newO;
+// }

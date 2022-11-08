@@ -17,9 +17,9 @@
     "strict": true,
     "strictPropertyInitialization": true,
     "lib": ["ES2020"],
-    // "typeRoots": [
-    //   "./typings"
-    // ]
+    "typeRoots": [
+      "./typings"
+    ]
   },
   "include": [
     "./**/*.ts"

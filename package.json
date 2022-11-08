@@ -1,10 +1,30 @@
 {
-  "name": "mini-component-dev",
-  "version": "1.0.2",
-  "main": "miniprogram_dist/index.js",
-  "author": "savage",
+  "name": "@savage181855/mini-store",
+  "version": "1.0.20",
+  "description": "微信小程序全局状态管理器",
+  "main": "dist/index.js",
   "license": "GPLv3",
-  "description": "基于 gulp4 + rollup2 搭建的微信小程序组件库打包脚手架",
+  "keywords": [
+    "mini-store",
+    "store",
+    "miniprograme-store",
+    "mini-redux",
+    "redux-mini",
+    "weixin-store",
+    "小程序状态管理",
+    "小程序状态",
+    "状态管理",
+    "微信小程序状态管理"
+  ],
+  "author": {
+    "name": "savage",
+    "email": "2443005004@qq.com",
+    "url": "https://github.com/savage181855/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/savage181855/mini-store"
+  },
   "scripts": {
     "devComponent": "cross-env NODE_ENV=dev gulp watch",
     "buildComponent": "cross-env NODE_ENV=pro gulp build",

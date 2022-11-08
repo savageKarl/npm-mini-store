@@ -22,11 +22,3 @@ export const setTip = (function () {
   };
 })();
 
-
-
-
-Function.prototype.apply
-
-const a = function() {}
-
-a.abc
