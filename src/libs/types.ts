@@ -1,5 +1,3 @@
-// export type Store = any;
-
 export type BaseStoreOptionItem = {
   storeKey: string;
   useStoreRef: UseStoreRef;

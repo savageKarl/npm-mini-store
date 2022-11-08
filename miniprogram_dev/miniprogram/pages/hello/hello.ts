@@ -12,9 +12,9 @@ Component({
     {
       storeKey: "appStore",
       useStoreRef: useAppStore,
-      mapState: ["navBarHeight", "shopList", "shopIndex", "openid"],
+      mapState: ['count'],
       watch: {
-        shopIndex(oldValue: any, value: any) {},
+
       },
     },
     {

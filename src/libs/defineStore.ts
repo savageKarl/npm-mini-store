@@ -133,14 +133,28 @@ export function defineStore<
 
     const o = options as StoreOptionItem;
 
+
+    const stateKeys = Object.keys(state);
+    if (o.mapState) {
+      o.mapState.forEach((key) => {
+        if (!stateKeys.includes(key)) {
+          console.error(
+            `msg: mapState "${key}" not in ${o.storeKey};\n\n` +
+            `info: pagePath: ${instance.route}, nodeId: "${instance.__wxExparserNodeId__}";\n`
+          );
+          return;
+        }
+      });
+    }
+
+
     if (o.watch) {
-      const stateKeys = Object.keys(state);
       const watchValue: StateType = {};
       Object.keys(o.watch).forEach((key) => {
         if (!stateKeys.includes(key)) {
           console.error(
-            `msg: key "${key}" not in ${o.storeKey};\n` +
-            `info: pagePath: ${instance.route}, nodeId: "${instance.__wxExparserNodeId__}";`
+            `msg: watch "${key}" not in ${o.storeKey};\n\n` +
+            `info: pagePath: ${instance.route}, nodeId: "${instance.__wxExparserNodeId__}";\n`
           );
           return;
         }

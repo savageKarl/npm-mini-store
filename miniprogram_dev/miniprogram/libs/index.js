@@ -158,13 +158,22 @@ function defineStore(options) {
         if (instance.type === "app")
             return;
         const o = options;
+        const stateKeys = Object.keys(state);
+        if (o.mapState) {
+            o.mapState.forEach((key) => {
+                if (!stateKeys.includes(key)) {
+                    console.error(`msg: mapState "${key}" not in ${o.storeKey};\n\n` +
+                        `info: pagePath: ${instance.route}, nodeId: "${instance.__wxExparserNodeId__}";\n`);
+                    return;
+                }
+            });
+        }
         if (o.watch) {
-            const stateKeys = Object.keys(state);
             const watchValue = {};
             Object.keys(o.watch).forEach((key) => {
                 if (!stateKeys.includes(key)) {
-                    console.error(`msg: key "${key}" not in ${o.storeKey};\n` +
-                        `info: pagePath: ${instance.route}, nodeId: "${instance.__wxExparserNodeId__}";`);
+                    console.error(`msg: watch "${key}" not in ${o.storeKey};\n\n` +
+                        `info: pagePath: ${instance.route}, nodeId: "${instance.__wxExparserNodeId__}";\n`);
                     return;
                 }
                 watchValue[key] = store[key];
