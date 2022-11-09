@@ -5,6 +5,7 @@ Page({
       storeKey: "appStore",
       useStoreRef: useAppStore,
       mapState: ["count", "user"],
+      mapComputed: ["fullname"],
     },
     {
       storeKey: "indexStore",

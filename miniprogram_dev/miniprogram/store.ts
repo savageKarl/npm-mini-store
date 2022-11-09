@@ -16,6 +16,7 @@ export const useAppStore = defineStore({
   },
   computed: {
     fullname(state) {
+      // console.debug(this,state)
       return state.firstname + state.lastname;
     }
   }

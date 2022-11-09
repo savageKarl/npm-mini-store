@@ -47,3 +47,20 @@ const dep = {
   ],
 };
 
+// const compuetdValue = {
+//   fullname: {
+//     value: function(){},
+//     dep: {
+//       firstname: 'xxx',
+//       lastname: 'ssss',
+//     }
+//   }
+// }
+
+
+const compuetdValue = {
+  fullname: {
+    value: function(){},
+    isChange: false, // 让依赖自动改这个字段就好了，然后我判断一下就好，不用每一个都去diff，太low了
+  }
+}

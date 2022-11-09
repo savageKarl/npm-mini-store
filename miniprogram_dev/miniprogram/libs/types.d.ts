@@ -21,6 +21,13 @@ export declare type AppNewOptions = Partial<AppOptions> & {
 export declare type AppInstance = WechatMiniprogram.App.Instance<StateType>;
 export declare type CustomInstance = {
     watchValue: Record<string, any>;
+    compuetdValue: {
+        [index: string]: {
+            fn: () => any;
+            isChange: false;
+            dep: Record<string, any>;
+        };
+    };
 };
 export declare type PageOptions = WechatMiniprogram.Page.Options<{}, {}>;
 export declare type PageNewOptions = Partial<PageOptions> & {

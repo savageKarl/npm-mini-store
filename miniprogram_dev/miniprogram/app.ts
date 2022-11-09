@@ -14,19 +14,6 @@ proxyComponent({
   }
 });
 
-const stores = [
-  {
-    storeKey: "appStore",
-    useStoreRef: useAppStore,
-  },
-] as const;
-
-type Store = typeof stores;
-type StoreOne = Store[0]["storeKey"];
-
-type SA = {
-  StoreOne: any;
-};
 
 App({
   stores: [
@@ -36,6 +23,6 @@ App({
     },
   ],
   onLaunch() {
-    console.debug(this);
+    // console.debug(this);
   },
 });

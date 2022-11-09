@@ -12,6 +12,7 @@ import type {
   ComponentInstance,
   Instance,
   AppInstance,
+  CustomInstance
 } from "./types";
 
 import { setTip } from "./tips";

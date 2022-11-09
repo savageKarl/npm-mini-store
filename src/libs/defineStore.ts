@@ -17,6 +17,7 @@ import type {
   ComponentInstance,
   DepsType,
   DepStack,
+  CustomInstance,
 } from "./types";
 
 import { getCurrentPagePath } from "./utils";
@@ -51,11 +52,29 @@ export function updateStoreState() {
         data[key] = deepClone(store[key]);
       }
     });
-    if (JSON.stringify(data) !== "{}") {
-      instance.setData(data);
-      setDataCount += 1;
-      console.debug(setDataCount, instance, data);
-    }
+    if (JSON.stringify(data) !== "{}") instance.setData(data);
+    // if (JSON.stringify(data) !== "{}") {
+    //   instance.setData(data);
+    //   setDataCount += 1;
+    //   console.debug(setDataCount, instance, data);
+    // }
+
+    // if (mapComputed) {
+    //   // 这里要diff依赖是否改变和是否和data相同
+    //   // 然后 setData
+    //   const data: Record<string, any> = {};
+    //   mapComputed?.forEach((key) => {
+    //     if (
+    //       !isSameDeep(
+    //         instance.data[key as keyof typeof instance.data],
+    //         store[key]
+    //       )
+    //     ) {
+    //       data[key] = deepClone(store[key]);
+    //     }
+    //   });
+    //   if (JSON.stringify(data) !== "{}") instance.setData(data);
+    // }
 
     if (watch) {
       Object.keys(watch).forEach((key) => {
@@ -85,24 +104,24 @@ export function removeStoreDep(instance: ComponentInstance) {
   console.debug(depStores, depStores[path]);
 }
 
+// function createReactive<T extends object>(target: T): T {
+//   const obj = new Proxy(target, {
+//     get(target, key: string, receiver) {
+//       const res = Reflect.get(target, key, receiver);
+//       if (isObject(res)) return createReactive(res);
+//       return res;
+//     },
+//     set(target, key: string, value, receiver) {
+//       const res = Reflect.set(target, key, value, receiver);
+//       updateStoreState();
+//       return res;
+//     },
+//   });
+
+//   return obj;
+// }
+
 function createReactive<T extends object>(target: T): T {
-  const obj = new Proxy(target, {
-    get(target, key: string, receiver) {
-      const res = Reflect.get(target, key, receiver);
-      if (isObject(res)) return createReactive(res);
-      return res;
-    },
-    set(target, key: string, value, receiver) {
-      const res = Reflect.set(target, key, value, receiver);
-      updateStoreState();
-      return res;
-    },
-  });
-
-  return obj;
-}
-
-function createReactiveWithCollectDep<T extends object>(target: T): T {
   const deps: DepsType = new Map();
 
   const obj = new Proxy(target, {
@@ -115,7 +134,6 @@ function createReactiveWithCollectDep<T extends object>(target: T): T {
           deps.get(key)?.add(item);
         });
       }
-      // debugger;
       if (isObject(res)) return createReactive(res);
 
       return res;
@@ -123,10 +141,10 @@ function createReactiveWithCollectDep<T extends object>(target: T): T {
     set(target, key: string, value, receiver) {
       const oldV = deepClone((target as any)[key]);
       const res = Reflect.set(target, key, value, receiver);
-      debugger;
       if (hasChanged(oldV, value)) {
         deps.get(key)?.forEach((item) => item(oldV, value));
       }
+      updateStoreState();
       return res;
     },
   });
@@ -175,7 +193,7 @@ export function defineStore<
   A extends Record<string, Callback>,
   C = {}
 >(options: Options<S, A, C>) {
-  const state = createReactiveWithCollectDep(options.state);
+  const state = createReactive(options.state);
   // const state = options.state;
   const computed = options.computed as any as Record<string, Callback>;
 
@@ -189,7 +207,6 @@ export function defineStore<
   setupActions(plainStore, store);
   setupPatchOfStore(plainStore, store);
   setupComputed(computed, store);
-
   return function useStore(
     instance: Instance,
     options: BaseStoreOptionItem | StoreOptionItem
@@ -205,7 +222,7 @@ export function defineStore<
         if (!stateKeys.includes(key)) {
           console.error(
             `msg: mapState "${key}" not in ${o.storeKey};\n\n` +
-              `info: pagePath: ${instance.route}, nodeId: "${instance.__wxExparserNodeId__}";\n`
+              `info: filePath: ${instance.is};`
           );
           return;
         }
@@ -213,12 +230,13 @@ export function defineStore<
     }
 
     if (o.watch) {
+      // use to compare watch whether to execute
       const watchValue: StateType = {};
       Object.keys(o.watch).forEach((key) => {
         if (!stateKeys.includes(key)) {
           console.error(
             `msg: watch "${key}" not in ${o.storeKey};\n\n` +
-              `info: pagePath: ${instance.route}, nodeId: "${instance.__wxExparserNodeId__}";\n`
+              `info: filePath: ${instance.is};`
           );
           return;
         }
@@ -228,16 +246,35 @@ export function defineStore<
     }
 
     if (o.mapComputed) {
+      // use to compare computed function whether to execute
+      const compuetdValue = {} as CustomInstance["compuetdValue"];
       const computedKeys = Object.keys(computed);
       o.mapComputed.forEach((key) => {
         if (!computedKeys.includes(key)) {
           console.error(
             `msg: mapComputed "${key}" not in ${o.storeKey};\n\n` +
-              `info: pagePath: ${instance.route}, nodeId: "${instance.__wxExparserNodeId__}";\n`
+              `info: filePath: ${instance.is};`
           );
           return;
         }
+        // computed[key] = computed[key].bind(store, state);
+        // Dep.push(function () {
+        //   (instance.compuetdValue as CustomInstance["compuetdValue"])[
+        //     key
+        //   ].isChange = true;
+        //   ;debugger;
+        // });
+
+        // store[key as keyof typeof store] = computed[key](state);
+        // Dep.pop();
+
+        // compuetdValue[key] = {
+        //   fn: computed[key],
+        //   isChange: false,
+        // };
+        // ;debugger;
       });
+      instance.compuetdValue = compuetdValue;
     }
 
     const route = instance.route as keyof typeof instance as string;

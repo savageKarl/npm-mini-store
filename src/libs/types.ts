@@ -20,13 +20,23 @@ export type AppInstance = WechatMiniprogram.App.Instance<StateType>;
 
 export type CustomInstance = {
   watchValue: Record<string, any>;
+  compuetdValue: {
+    [index: string]: {
+      fn: () => any;
+      isChange: false;
+      dep: Record<string, any>;
+    };
+  };
 };
 
 export type PageOptions = WechatMiniprogram.Page.Options<{}, {}>;
 export type PageNewOptions = Partial<PageOptions> & {
   stores?: StoreOptions;
 };
-export type PageInstance = WechatMiniprogram.Page.Instance<{}, CustomInstance & StateType>;
+export type PageInstance = WechatMiniprogram.Page.Instance<
+  {},
+  CustomInstance & StateType
+>;
 
 export type ComponentOptions = WechatMiniprogram.Component.Options<
   {},

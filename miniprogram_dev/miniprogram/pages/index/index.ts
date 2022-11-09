@@ -1,4 +1,3 @@
-
 import { useAppStore } from "../../store";
 
 Page({
@@ -6,11 +5,11 @@ Page({
     {
       storeKey: "appStore",
       useStoreRef: useAppStore,
-      mapState: ["count", "user"],
-      mapComputed: ['fullname'],
+      mapState: ["count", "user", ],
+      mapComputed: ["fullname"],
       watch: {
         user(oldValue: any, value: any) {
-          console.debug('count', oldValue, value)
+          console.debug("count", oldValue, value);
         },
       },
     },
@@ -25,12 +24,14 @@ Page({
     // console.debug(this.route);
   },
   onAdd() {
-    this.appStore.patch((store:any) => {
-      store.user.age+=1
-      store.count+=1
-      store.firstname = 'foo';
-      // console.debug(store)
+    this.appStore.patch((store: any) => {
+      // for (let i = 1; i < 10; i++) {
+      //   store.user.age += i;
+      // }
+      // store.count+=1
+      store.firstname = "foo";
+      console.debug(store);
       // console.debug(this.appStore)
-    })
-  }
+    });
+  },
 });
