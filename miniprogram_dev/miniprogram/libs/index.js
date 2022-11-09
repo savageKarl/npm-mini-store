@@ -75,23 +75,7 @@ function getCurrentPagePath() {
 
 const depStores = {};
 const Dep = [];
-const setData = (function () {
-    let queue = [];
-    return function (instance, data) {
-        queue.push(data);
-        Promise.resolve()
-            .then(() => {
-            if (queue.length === 0)
-                return;
-            const data = queue.reduce((x, y) => (Object.assign(Object.assign({}, x), y)));
-            instance.setData(data);
-            queue = [];
-        })
-            .catch((err) => {
-            console.debug(err);
-        });
-    };
-})();
+// not pure function
 function updateStoreState() {
     const path = getCurrentPagePath();
     if (!path)
@@ -112,13 +96,8 @@ function updateStoreState() {
                 data[key] = dist_2(store[key]);
             }
         });
-        // if (JSON.stringify(data) !== "{}") instance.setData(data);
-        if (JSON.stringify(data) !== "{}") {
-            setData(instance, data);
-            // instance.setData(data);
-            // setDataCount += 1;
-            // console.debug(setDataCount, instance, data);
-        }
+        if (JSON.stringify(data) !== "{}")
+            instance.setData(data);
         if (watch) {
             Object.keys(watch).forEach((key) => {
                 if (!dist_8(instance.watchValue[key], store[key])) {
@@ -134,10 +113,12 @@ function clearStoreDep() {
     const path = getCurrentPagePath();
     depStores[path] = [];
 }
+// not pure function
 function removeStoreDep(instance) {
     const path = getCurrentPagePath();
     depStores[path] = depStores[path].filter((item) => item.instance !== instance);
 }
+// not pure function
 function createReactive(target) {
     const deps = new Map();
     const obj = new Proxy(target, {
@@ -201,8 +182,7 @@ function setupComputed(fns, proxyStore) {
     }
 }
 function defineStore(options) {
-    const state = createReactive(options.state);
-    // const state = options.state;
+    const state = options.state;
     const computed = options.computed;
     const plainStore = Object.assign(Object.assign(Object.assign({}, state), options.actions), computed);
     const store = createReactive(plainStore);
@@ -239,7 +219,6 @@ function defineStore(options) {
         }
         if (o.mapComputed) {
             // use to compare computed function whether to execute
-            const compuetdValue = {};
             const computedKeys = Object.keys(computed);
             o.mapComputed.forEach((key) => {
                 if (!computedKeys.includes(key)) {
@@ -248,7 +227,6 @@ function defineStore(options) {
                     return;
                 }
             });
-            instance.compuetdValue = compuetdValue;
         }
         const route = instance.route;
         depStores[route] = depStores[route] || [];
@@ -324,6 +302,7 @@ function proxyComponent(globalOptions) {
                 this.route = getCurrentPagePath();
                 const { stores } = options;
                 callUseStoreRef(this, stores);
+                updateStoreState();
                 (_a = options === null || options === void 0 ? void 0 : options.attached) === null || _a === void 0 ? void 0 : _a.call(this);
                 (_b = globalOptions === null || globalOptions === void 0 ? void 0 : globalOptions.attached) === null || _b === void 0 ? void 0 : _b.call(this);
             },
@@ -338,6 +317,7 @@ function proxyComponent(globalOptions) {
                     this.route = getCurrentPagePath();
                     const { stores } = options;
                     callUseStoreRef(this, stores);
+                    updateStoreState();
                     (_b = (_a = options === null || options === void 0 ? void 0 : options.lifetimes) === null || _a === void 0 ? void 0 : _a.attached) === null || _b === void 0 ? void 0 : _b.call(this);
                     (_d = (_c = globalOptions === null || globalOptions === void 0 ? void 0 : globalOptions.lifetimes) === null || _c === void 0 ? void 0 : _c.attached) === null || _d === void 0 ? void 0 : _d.call(this);
                 },

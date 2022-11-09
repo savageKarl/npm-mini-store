@@ -14,6 +14,9 @@ Page({
         count(oldValue: any, value: any) {
           console.debug("count", oldValue, value);
         },
+        firstname(oldValue: any, value: any) {
+          console.debug("firstname", oldValue, value);
+        },
       },
     },
     // {
@@ -35,12 +38,13 @@ Page({
     // this.appStore.increment();
     // return;
     this.appStore.patch((store: any) => {
-      for (let i = 1; i < 10; i++) {
-        console.info('i', i)
-        store.user.age += 1;
-        console.info(store.user.age)
-      }
-      // store.count+=1
+      // for (let i = 1; i < 10; i++) {
+      //   store.user.age += 1;
+      //   store.count += 1;
+      //   console.info(store.user.age)
+      // }
+      store.firstname='foo'
+      store.count+=1
     });
   },
 });

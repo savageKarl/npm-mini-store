@@ -11,8 +11,6 @@ import type {
   StoreOptions,
   ComponentInstance,
   Instance,
-  AppInstance,
-  CustomInstance
 } from "./types";
 
 import { setTip } from "./tips";
@@ -112,6 +110,8 @@ export function proxyComponent(globalOptions: ComponentOptions) {
         const { stores } = options;
         callUseStoreRef(this as any as Instance, stores);
 
+        updateStoreState();
+
         options?.attached?.call(this);
         globalOptions?.attached?.call(this);
       },
@@ -127,6 +127,8 @@ export function proxyComponent(globalOptions: ComponentOptions) {
           const { stores } = options;
 
           callUseStoreRef(this as any as Instance, stores);
+
+          updateStoreState();
 
           options?.lifetimes?.attached?.call(this);
           globalOptions?.lifetimes?.attached?.call(this);

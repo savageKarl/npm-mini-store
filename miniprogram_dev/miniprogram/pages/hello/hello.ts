@@ -41,7 +41,7 @@ Component({
   },
   lifetimes: {
     attached() {
-      // console.debug(this);
+      console.debug(this);
     }}
 })
 

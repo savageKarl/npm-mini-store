@@ -25,25 +25,7 @@ import { getCurrentPagePath } from "./utils";
 const depStores: Record<string, DepStateWithWatch> = {};
 const Dep: DepStack = [];
 
-const setData = (function () {
-  let queue: Record<string, any>[] = [];
-
-  return function (instance: Instance, data: Record<string, any>) {
-    queue.push(data);
-    Promise.resolve()
-      .then(() => {
-        if (queue.length === 0) return;
-        const data = queue.reduce((x, y) => ({ ...x, ...y }));
-        (instance.setData as any)(data);
-        queue = [];
-      })
-      .catch((err) => {
-        console.debug(err);
-      });
-  };
-})();
-
-
+// not pure function
 export function updateStoreState() {
   const path = getCurrentPagePath();
   if (!path) return;
@@ -51,7 +33,6 @@ export function updateStoreState() {
   const stores = depStores[path];
   if (!stores) return;
 
-  let setDataCount = 0;
 
   stores.forEach((s) => {
     const { mapState, instance, store, watch, mapComputed } = s;
@@ -71,13 +52,7 @@ export function updateStoreState() {
         data[key] = deepClone(store[key]);
       }
     });
-    // if (JSON.stringify(data) !== "{}") instance.setData(data);
-    if (JSON.stringify(data) !== "{}") {
-      setData(instance as any, data);
-      // instance.setData(data);
-      // setDataCount += 1;
-      // console.debug(setDataCount, instance, data);
-    }
+    if (JSON.stringify(data) !== "{}") instance.setData(data);
 
     if (watch) {
       Object.keys(watch).forEach((key) => {
@@ -96,6 +71,7 @@ export function clearStoreDep() {
   depStores[path] = [];
 }
 
+// not pure function
 export function removeStoreDep(instance: ComponentInstance) {
   const path = getCurrentPagePath();
   depStores[path] = depStores[path].filter(
@@ -103,6 +79,7 @@ export function removeStoreDep(instance: ComponentInstance) {
   );
 }
 
+// not pure function
 function createReactive<T extends object>(target: T): T {
   const deps: DepsType = new Map();
 
@@ -175,8 +152,7 @@ export function defineStore<
   A extends Record<string, Callback>,
   C = {}
 >(options: Options<S, A, C>) {
-  const state = createReactive(options.state);
-  // const state = options.state;
+  const state = options.state;
   const computed = options.computed as any as Record<string, Callback>;
 
   const plainStore = {
@@ -229,7 +205,6 @@ export function defineStore<
 
     if (o.mapComputed) {
       // use to compare computed function whether to execute
-      const compuetdValue = {} as CustomInstance["compuetdValue"];
       const computedKeys = Object.keys(computed);
       o.mapComputed.forEach((key) => {
         if (!computedKeys.includes(key)) {
@@ -240,7 +215,6 @@ export function defineStore<
           return;
         }
       });
-      instance.compuetdValue = compuetdValue;
     }
 
     const route = instance.route as keyof typeof instance as string;
