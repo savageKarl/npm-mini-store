@@ -5,11 +5,18 @@ export const useAppStore = defineStore({
     count: 0,
     user: {
       age:0,
-    }
+    },
+    firstname: 'fuck',
+    lastname: 'shit',
   },
   actions: {
     increment() {
       console.debug(this);
     }
   },
+  computed: {
+    fullname(state) {
+      return state.firstname + state.lastname;
+    }
+  }
 })

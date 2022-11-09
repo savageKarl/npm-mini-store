@@ -29,7 +29,7 @@ const plugins = [
   resolve(),
 ];
 
-if (env === 'pro') plugins.push(terser())
+// if (env === 'pro') plugins.push(terser())
 
 
 module.exports = {

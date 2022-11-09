@@ -3,8 +3,16 @@ import { proxyApp, proxyPage, proxyComponent } from "./libs/index";
 import { useAppStore } from "./store";
 
 proxyApp();
-proxyPage({});
-proxyComponent({});
+proxyPage({
+  onReady() {
+    // console.debug('onReady')
+  }
+});
+proxyComponent({
+  created() {
+    // console.debug('created')
+  }
+});
 
 const stores = [
   {

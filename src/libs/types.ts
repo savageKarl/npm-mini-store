@@ -5,6 +5,7 @@ export type BaseStoreOptionItem = {
 
 export type StoreOptionItem = BaseStoreOptionItem & {
   mapState?: string[];
+  mapComputed?: string[];
   watch?: Record<string, (oldV: any, v: any) => any>;
 };
 
@@ -15,7 +16,7 @@ export type AppOptions = WechatMiniprogram.App.Option & { type: string };
 export type AppNewOptions = Partial<AppOptions> & {
   stores?: BaseStoreOptions;
 };
-export type AppInstance = WechatMiniprogram.App.Instance<{}>;
+export type AppInstance = WechatMiniprogram.App.Instance<StateType>;
 
 export type CustomInstance = {
   watchValue: Record<string, any>;
@@ -25,7 +26,7 @@ export type PageOptions = WechatMiniprogram.Page.Options<{}, {}>;
 export type PageNewOptions = Partial<PageOptions> & {
   stores?: StoreOptions;
 };
-export type PageInstance = WechatMiniprogram.Page.Instance<{}, CustomInstance>;
+export type PageInstance = WechatMiniprogram.Page.Instance<{}, CustomInstance & StateType>;
 
 export type ComponentOptions = WechatMiniprogram.Component.Options<
   {},
@@ -40,7 +41,7 @@ export type ComponentInstance = WechatMiniprogram.Component.Instance<
   {},
   {},
   {},
-  CustomInstance
+  CustomInstance & StateType
 >;
 
 export type Callback = (...args: any) => any;
@@ -75,11 +76,12 @@ export type Store<S, A, C> = S &
     useWatcher<K extends keyof S>(k: K, fn: (oldV: S[K], V: S[K]) => any): any;
   };
 
+export type Instance = (AppInstance | PageInstance | ComponentInstance) & {
+  type: string;
+};
+
 export type UseStoreRef = {
-  (
-    instance: AppInstance | PageInstance | ComponentInstance,
-    options: Omit<BaseStoreOptionItem, "useStoreRef">
-  ): any;
+  (instance: Instance, options: Omit<BaseStoreOptionItem, "useStoreRef">): any;
 };
 
 export type DepStack = Callback[];

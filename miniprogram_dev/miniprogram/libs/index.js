@@ -36,10 +36,10 @@ dist.debounce;
 var dist_2 = dist.deepClone;
 dist.get;
 dist.getSingle;
-dist.hasChanged;
+var dist_5 = dist.hasChanged;
 dist.installEventCenter;
 var dist_7 = dist.isObject;
-dist.isSameDeep;
+var dist_8 = dist.isSameDeep;
 dist.isSameShallow;
 dist.parseAreaListData;
 dist.shallowClone;
@@ -73,47 +73,56 @@ function getCurrentPagePath() {
     return ((_a = pages[pages.length - 1]) === null || _a === void 0 ? void 0 : _a.route) || '';
 }
 
-const depens = {};
+const depStores = {};
+let Dep = [];
 function updateStoreState() {
     const path = getCurrentPagePath();
     if (!path)
         return;
-    const stores = depens[path];
+    const stores = depStores[path];
     if (!stores)
         return;
+    let setDataCount = 0;
     stores.forEach((s) => {
-        const { mapState, instance, store, watch } = s;
-        // debugger;
+        const { mapState, instance, store, watch, mapComputed } = s;
+        const stateArr = [];
+        if (mapState)
+            stateArr.push(...mapState);
+        if (mapComputed)
+            stateArr.push(...mapComputed);
         const data = {};
-        mapState === null || mapState === void 0 ? void 0 : mapState.forEach((key) => {
-            if (instance.data[key] !== store[key]) {
+        stateArr === null || stateArr === void 0 ? void 0 : stateArr.forEach((key) => {
+            if (!dist_8(instance.data[key], store[key])) {
                 data[key] = dist_2(store[key]);
             }
         });
-        instance.setData(data);
+        if (JSON.stringify(data) !== "{}") {
+            instance.setData(data);
+            setDataCount += 1;
+            console.debug(setDataCount, instance, data);
+        }
         if (watch) {
             Object.keys(watch).forEach((key) => {
-                if (instance.watchValue[key] !== store[key]) {
-                    watch[key](instance.watchValue[key], store[key]);
-                    instance.watchValue[key] = dist_2(store[key]);
+                if (!dist_8(instance.watchValue[key], store[key])) {
+                    const newValue = dist_2(store[key]);
+                    watch[key](instance.watchValue[key], newValue);
+                    instance.watchValue[key] = newValue;
                 }
             });
         }
     });
-    // console.debug("在这里进行diff， setData 和 watch", depens, depens[path]);
 }
 function clearStoreDep() {
     const path = getCurrentPagePath();
-    depens[path] = [];
-    console.debug(depens, depens[path]);
+    depStores[path] = [];
+    console.debug(depStores, depStores[path]);
 }
 function removeStoreDep(instance) {
     const path = getCurrentPagePath();
-    depens[path] = depens[path].filter((item) => item.instance !== instance);
-    console.debug(depens, depens[path]);
+    depStores[path] = depStores[path].filter((item) => item.instance !== instance);
+    console.debug(depStores, depStores[path]);
 }
 function createReactive(target) {
-    // const deps: DepsType = new Map();
     const obj = new Proxy(target, {
         get(target, key, receiver) {
             const res = Reflect.get(target, key, receiver);
@@ -129,6 +138,38 @@ function createReactive(target) {
     });
     return obj;
 }
+function createReactiveWithCollectDep(target) {
+    const deps = new Map();
+    const obj = new Proxy(target, {
+        get(target, key, receiver) {
+            const res = Reflect.get(target, key, receiver);
+            if (Dep.length > 0) {
+                if (!deps.get(key))
+                    deps.set(key, new Set());
+                Dep.forEach((item) => {
+                    var _a;
+                    (_a = deps.get(key)) === null || _a === void 0 ? void 0 : _a.add(item);
+                });
+            }
+            // debugger;
+            if (dist_7(res))
+                return createReactive(res);
+            return res;
+        },
+        set(target, key, value, receiver) {
+            var _a;
+            const oldV = dist_2(target[key]);
+            const res = Reflect.set(target, key, value, receiver);
+            debugger;
+            if (dist_5(oldV, value)) {
+                (_a = deps.get(key)) === null || _a === void 0 ? void 0 : _a.forEach((item) => item(oldV, value));
+            }
+            return res;
+        },
+    });
+    return obj;
+}
+// not pure function
 function setupActions(plainStore, proxyStore) {
     for (let k in plainStore) {
         if (typeof plainStore[k] === "function") {
@@ -136,24 +177,39 @@ function setupActions(plainStore, proxyStore) {
         }
     }
 }
-function setupPatchOfStore(store) {
-    store.patch = function (val) {
+// not pure function
+function setupPatchOfStore(plainStore, proxyStore) {
+    plainStore.patch = function (val) {
         if (typeof val === "object") {
             for (let k in val) {
-                store[k] = val[k];
+                proxyStore[k] = val[k];
             }
         }
         if (typeof val === "function") {
-            val(store);
+            val(proxyStore);
         }
     };
 }
+// not pure function
+function setupComputed(fns, proxyStore) {
+    if (fns) {
+        for (let k in fns) {
+            fns[k] = fns[k].bind(proxyStore, proxyStore);
+            Dep.push(() => (proxyStore[k] = fns[k]()));
+            proxyStore[k] = fns[k]();
+            Dep.pop();
+        }
+    }
+}
 function defineStore(options) {
-    const state = options.state;
-    const plainStore = Object.assign(Object.assign({}, options.state), options.actions);
+    const state = createReactiveWithCollectDep(options.state);
+    // const state = options.state;
+    const computed = options.computed;
+    const plainStore = Object.assign(Object.assign(Object.assign({}, state), options.actions), computed);
     const store = createReactive(plainStore);
     setupActions(plainStore, store);
-    setupPatchOfStore(store);
+    setupPatchOfStore(plainStore, store);
+    setupComputed(computed, store);
     return function useStore(instance, options) {
         instance[options.storeKey] = store;
         if (instance.type === "app")
@@ -181,9 +237,19 @@ function defineStore(options) {
             });
             instance.watchValue = watchValue;
         }
-        depens[instance.route] = depens[instance.route] || [];
-        depens[instance.route].push(Object.assign(Object.assign({}, o), { instance,
-            store }));
+        if (o.mapComputed) {
+            const computedKeys = Object.keys(computed);
+            o.mapComputed.forEach((key) => {
+                if (!computedKeys.includes(key)) {
+                    console.error(`msg: mapComputed "${key}" not in ${o.storeKey};\n\n` +
+                        `info: pagePath: ${instance.route}, nodeId: "${instance.__wxExparserNodeId__}";\n`);
+                    return;
+                }
+            });
+        }
+        const route = instance.route;
+        depStores[route] = depStores[route] || [];
+        depStores[route].push(Object.assign(Object.assign({}, o), { instance: instance, store }));
     };
 }
 
@@ -304,27 +370,39 @@ function mixinHooks(hooks, newOptions, globalOptions, options) {
         // 这里分割的原因是要注入 lifetimes.created 这种 hook
         const paths = name.split(".");
         const len = paths.length;
+        const indexOne = paths[0];
         if (len === 1) {
-            newO[paths[0]] = function () {
+            newO[indexOne] = function () {
                 var _a, _b;
-                (_a = globalOptions === null || globalOptions === void 0 ? void 0 : globalOptions[paths[0]]) === null || _a === void 0 ? void 0 : _a.call(this, ...arguments);
-                (_b = options === null || options === void 0 ? void 0 : options[paths[0]]) === null || _b === void 0 ? void 0 : _b.call(this, ...arguments);
+                (_a = globalOptions === null || globalOptions === void 0 ? void 0 : globalOptions[indexOne]) === null || _a === void 0 ? void 0 : _a.call(this, ...arguments);
+                (_b = options === null || options === void 0 ? void 0 : options[indexOne]) === null || _b === void 0 ? void 0 : _b.call(this, ...arguments);
             };
         }
         else {
-            newO[paths[0]] = Object.assign({}, newO === null || newO === void 0 ? void 0 : newO[paths[0]]);
+            const indexTwo = paths[1];
             // pageLifetimes 的生命周期会覆盖this上的生命周期
-            if (((_a = globalOptions === null || globalOptions === void 0 ? void 0 : globalOptions[paths[0]]) === null || _a === void 0 ? void 0 : _a[paths[1]]) ||
-                ((_b = options === null || options === void 0 ? void 0 : options[paths[0]]) === null || _b === void 0 ? void 0 : _b[paths[1]])) {
-                newO[paths[0]][paths[1]] = function () {
+            if (((_a = globalOptions === null || globalOptions === void 0 ? void 0 : globalOptions[indexOne]) === null || _a === void 0 ? void 0 : _a[indexTwo]) ||
+                ((_b = options === null || options === void 0 ? void 0 : options[indexOne]) === null || _b === void 0 ? void 0 : _b[indexTwo])) {
+                newO[indexOne][indexTwo] = function () {
                     var _a, _b, _c, _d;
-                    (_b = (_a = globalOptions === null || globalOptions === void 0 ? void 0 : globalOptions[paths[0]]) === null || _a === void 0 ? void 0 : _a[paths[1]]) === null || _b === void 0 ? void 0 : _b.call(this, ...arguments);
-                    (_d = (_c = options === null || options === void 0 ? void 0 : options[paths[0]]) === null || _c === void 0 ? void 0 : _c[paths[1]]) === null || _d === void 0 ? void 0 : _d.call(this, ...arguments);
+                    (_b = (_a = globalOptions === null || globalOptions === void 0 ? void 0 : globalOptions[indexOne]) === null || _a === void 0 ? void 0 : _a[indexTwo]) === null || _b === void 0 ? void 0 : _b.call(this, ...arguments);
+                    (_d = (_c = options === null || options === void 0 ? void 0 : options[indexOne]) === null || _c === void 0 ? void 0 : _c[indexTwo]) === null || _d === void 0 ? void 0 : _d.call(this, ...arguments);
                 };
             }
         }
     });
     return newO;
 }
+
+defineStore({
+    state: {
+        count: 0
+    },
+    actions: {
+        add() {
+            this.add;
+        }
+    }
+});
 
 export { clearStoreDep, defineStore, proxyApp, proxyComponent, proxyPage, removeStoreDep, updateStoreState };

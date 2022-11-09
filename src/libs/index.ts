@@ -1,6 +1,21 @@
 export * from "./proxyFunc";
 export * from "./defineStore";
 
+import {defineStore} from './defineStore'
+
+
+const useStore = defineStore({
+  state: {
+    count: 0
+  },
+  actions: {
+    add() {
+      this.add
+    }
+  }
+})
+
+
 // 响应式机制改变
 
 // 页面和组件使用同一个页面路径，因为组件依赖页面运行

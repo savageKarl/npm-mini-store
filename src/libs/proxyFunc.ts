@@ -1,14 +1,6 @@
-import {
-  installEventCenter,
-  isObject,
-  hasChanged,
-  deepClone,
-  get,
-} from "@savage181855/utils";
+import { deepClone } from "@savage181855/utils";
 
 import type {
-  Store,
-  UseStoreRef,
   BaseStoreOptions,
   AppOptions,
   AppNewOptions,
@@ -17,6 +9,9 @@ import type {
   ComponentOptions,
   ComponentNewOptions,
   StoreOptions,
+  ComponentInstance,
+  Instance,
+  AppInstance,
 } from "./types";
 
 import { setTip } from "./tips";
@@ -26,7 +21,7 @@ import { updateStoreState, clearStoreDep, removeStoreDep } from "./defineStore";
 import { getCurrentPagePath } from "./utils";
 
 function callUseStoreRef(
-  instance: any,
+  instance: Instance,
   stores?: BaseStoreOptions | StoreOptions
 ) {
   stores?.forEach((s) => {
@@ -47,7 +42,7 @@ export function proxyApp() {
       onLaunch(o: WechatMiniprogram.App.LaunchShowOption) {
         this.type = "app";
         const { stores } = options;
-        callUseStoreRef(this, stores);
+        callUseStoreRef(this as any as Instance, stores);
 
         options?.onLaunch?.call(this, o);
       },
@@ -68,7 +63,7 @@ export function proxyPage(globalOptions: PageOptions) {
       ...rest,
       onLoad(o) {
         const { stores } = options;
-        callUseStoreRef(this, stores);
+        callUseStoreRef(this as any as Instance, stores);
 
         globalOptions?.onLoad?.call(this, o);
         options?.onLoad?.call(this, o);
@@ -114,13 +109,13 @@ export function proxyComponent(globalOptions: ComponentOptions) {
       attached() {
         this.route = getCurrentPagePath();
         const { stores } = options;
-        callUseStoreRef(this, stores);
+        callUseStoreRef(this as any as Instance, stores);
 
         options?.attached?.call(this);
         globalOptions?.attached?.call(this);
       },
       detached() {
-        removeStoreDep(this);
+        removeStoreDep(this as any as ComponentInstance);
 
         options?.detached?.call(this);
         globalOptions?.detached?.call(this);
@@ -130,13 +125,13 @@ export function proxyComponent(globalOptions: ComponentOptions) {
           this.route = getCurrentPagePath();
           const { stores } = options;
 
-          callUseStoreRef(this, stores);
+          callUseStoreRef(this as any as Instance, stores);
 
           options?.lifetimes?.attached?.call(this);
           globalOptions?.lifetimes?.attached?.call(this);
         },
         detached() {
-          removeStoreDep(this);
+          removeStoreDep(this as any as ComponentInstance);
 
           options?.lifetimes?.detached?.call(this);
           globalOptions?.lifetimes?.detached?.call(this);
@@ -179,21 +174,22 @@ function mixinHooks(
     const paths = name.split(".");
     const len = paths.length;
 
+    const indexOne = paths[0];
     if (len === 1) {
-      newO[paths[0]] = function () {
-        globalOptions?.[paths[0] as keyof typeof globalOptions ]?.call(this, ...arguments);
-        options?.[paths[0]]?.call(this, ...arguments);
+      newO[indexOne] = function () {
+        globalOptions?.[indexOne]?.call(this, ...arguments);
+        options?.[indexOne]?.call(this, ...arguments);
       };
     } else {
-      newO[paths[0]] = { ...newO?.[paths[0]] };
+      const indexTwo = paths[1];
       // pageLifetimes 的生命周期会覆盖this上的生命周期
       if (
-        globalOptions?.[paths[0]]?.[paths[1]] ||
-        options?.[paths[0]]?.[paths[1]]
+        globalOptions?.[indexOne]?.[indexTwo] ||
+        options?.[indexOne]?.[indexTwo]
       ) {
-        newO[paths[0]][paths[1]] = function () {
-          globalOptions?.[paths[0]]?.[paths[1]]?.call(this, ...arguments);
-          options?.[paths[0]]?.[paths[1]]?.call(this, ...arguments);
+        newO[indexOne][indexTwo] = function () {
+          globalOptions?.[indexOne]?.[indexTwo]?.call(this, ...arguments);
+          options?.[indexOne]?.[indexTwo]?.call(this, ...arguments);
         };
       }
     }

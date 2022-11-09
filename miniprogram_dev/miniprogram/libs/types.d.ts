@@ -7,6 +7,7 @@ export declare type BaseStoreOptionItem = {
 };
 export declare type StoreOptionItem = BaseStoreOptionItem & {
     mapState?: string[];
+    mapComputed?: string[];
     watch?: Record<string, (oldV: any, v: any) => any>;
 };
 export declare type BaseStoreOptions = BaseStoreOptionItem[];
@@ -17,7 +18,7 @@ export declare type AppOptions = WechatMiniprogram.App.Option & {
 export declare type AppNewOptions = Partial<AppOptions> & {
     stores?: BaseStoreOptions;
 };
-export declare type AppInstance = WechatMiniprogram.App.Instance<{}>;
+export declare type AppInstance = WechatMiniprogram.App.Instance<StateType>;
 export declare type CustomInstance = {
     watchValue: Record<string, any>;
 };
@@ -25,14 +26,14 @@ export declare type PageOptions = WechatMiniprogram.Page.Options<{}, {}>;
 export declare type PageNewOptions = Partial<PageOptions> & {
     stores?: StoreOptions;
 };
-export declare type PageInstance = WechatMiniprogram.Page.Instance<{}, CustomInstance>;
+export declare type PageInstance = WechatMiniprogram.Page.Instance<{}, CustomInstance & StateType>;
 export declare type ComponentOptions = WechatMiniprogram.Component.Options<{}, {}, {}, {
     route: string;
 }>;
 export declare type ComponentNewOptions = Partial<ComponentOptions> & {
     stores?: StoreOptions;
 };
-export declare type ComponentInstance = WechatMiniprogram.Component.Instance<{}, {}, {}, CustomInstance>;
+export declare type ComponentInstance = WechatMiniprogram.Component.Instance<{}, {}, {}, CustomInstance & StateType>;
 export declare type Callback = (...args: any) => any;
 export declare type DepsType = Map<any, Set<Callback>>;
 export declare type StateType = Record<string | number | symbol, unknown>;
@@ -50,8 +51,11 @@ export declare type Store<S, A, C> = S & A & StoreWithGetters<C> & {
     patch(v: Partial<S> | ((arg: S) => unknown)): unknown;
     useWatcher<K extends keyof S>(k: K, fn: (oldV: S[K], V: S[K]) => any): any;
 };
+export declare type Instance = (AppInstance | PageInstance | ComponentInstance) & {
+    type: string;
+};
 export declare type UseStoreRef = {
-    (instance: AppInstance | PageInstance | ComponentInstance, options: Omit<BaseStoreOptionItem, "useStoreRef">): any;
+    (instance: Instance, options: Omit<BaseStoreOptionItem, "useStoreRef">): any;
 };
 export declare type DepStack = Callback[];
 export declare type DepStateWithWatch = (StoreOptionItem & {
