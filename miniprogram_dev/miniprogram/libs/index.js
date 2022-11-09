@@ -74,7 +74,24 @@ function getCurrentPagePath() {
 }
 
 const depStores = {};
-let Dep = [];
+const Dep = [];
+const setData = (function () {
+    let queue = [];
+    return function (instance, data) {
+        queue.push(data);
+        Promise.resolve()
+            .then(() => {
+            if (queue.length === 0)
+                return;
+            const data = queue.reduce((x, y) => (Object.assign(Object.assign({}, x), y)));
+            instance.setData(data);
+            queue = [];
+        })
+            .catch((err) => {
+            console.debug(err);
+        });
+    };
+})();
 function updateStoreState() {
     const path = getCurrentPagePath();
     if (!path)
@@ -95,29 +112,13 @@ function updateStoreState() {
                 data[key] = dist_2(store[key]);
             }
         });
-        if (JSON.stringify(data) !== "{}")
-            instance.setData(data);
-        // if (JSON.stringify(data) !== "{}") {
-        //   instance.setData(data);
-        //   setDataCount += 1;
-        //   console.debug(setDataCount, instance, data);
-        // }
-        // if (mapComputed) {
-        //   // 这里要diff依赖是否改变和是否和data相同
-        //   // 然后 setData
-        //   const data: Record<string, any> = {};
-        //   mapComputed?.forEach((key) => {
-        //     if (
-        //       !isSameDeep(
-        //         instance.data[key as keyof typeof instance.data],
-        //         store[key]
-        //       )
-        //     ) {
-        //       data[key] = deepClone(store[key]);
-        //     }
-        //   });
-        //   if (JSON.stringify(data) !== "{}") instance.setData(data);
-        // }
+        // if (JSON.stringify(data) !== "{}") instance.setData(data);
+        if (JSON.stringify(data) !== "{}") {
+            setData(instance, data);
+            // instance.setData(data);
+            // setDataCount += 1;
+            // console.debug(setDataCount, instance, data);
+        }
         if (watch) {
             Object.keys(watch).forEach((key) => {
                 if (!dist_8(instance.watchValue[key], store[key])) {
@@ -132,28 +133,11 @@ function updateStoreState() {
 function clearStoreDep() {
     const path = getCurrentPagePath();
     depStores[path] = [];
-    console.debug(depStores, depStores[path]);
 }
 function removeStoreDep(instance) {
     const path = getCurrentPagePath();
     depStores[path] = depStores[path].filter((item) => item.instance !== instance);
-    console.debug(depStores, depStores[path]);
 }
-// function createReactive<T extends object>(target: T): T {
-//   const obj = new Proxy(target, {
-//     get(target, key: string, receiver) {
-//       const res = Reflect.get(target, key, receiver);
-//       if (isObject(res)) return createReactive(res);
-//       return res;
-//     },
-//     set(target, key: string, value, receiver) {
-//       const res = Reflect.set(target, key, value, receiver);
-//       updateStoreState();
-//       return res;
-//     },
-//   });
-//   return obj;
-// }
 function createReactive(target) {
     const deps = new Map();
     const obj = new Proxy(target, {
@@ -263,20 +247,6 @@ function defineStore(options) {
                         `info: filePath: ${instance.is};`);
                     return;
                 }
-                // computed[key] = computed[key].bind(store, state);
-                // Dep.push(function () {
-                //   (instance.compuetdValue as CustomInstance["compuetdValue"])[
-                //     key
-                //   ].isChange = true;
-                //   ;debugger;
-                // });
-                // store[key as keyof typeof store] = computed[key](state);
-                // Dep.pop();
-                // compuetdValue[key] = {
-                //   fn: computed[key],
-                //   isChange: false,
-                // };
-                // ;debugger;
             });
             instance.compuetdValue = compuetdValue;
         }

@@ -17,10 +17,10 @@ Component({
 
       },
     },
-    {
-      storeKey: "indexStore",
-      useStoreRef: useAppStore,
-    },
+    // {
+    //   storeKey: "indexStore",
+    //   useStoreRef: useAppStore,
+    // },
   ],
   properties: {
 

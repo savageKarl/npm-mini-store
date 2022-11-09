@@ -11,12 +11,11 @@ export const useAppStore = defineStore({
   },
   actions: {
     increment() {
-      console.debug(this);
+      this.count += 1;
     }
   },
   computed: {
     fullname(state) {
-      // console.debug(this,state)
       return state.firstname + state.lastname;
     }
   }
