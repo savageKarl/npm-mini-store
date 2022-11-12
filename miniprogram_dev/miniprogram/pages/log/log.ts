@@ -1,4 +1,4 @@
-import { useAppStore } from "../../store";
+import { useAppStore } from "../../store/appStore";
 Page({
   stores: [
     {

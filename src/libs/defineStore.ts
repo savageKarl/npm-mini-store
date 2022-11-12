@@ -33,7 +33,6 @@ export function updateStoreState() {
   const stores = depStores[path];
   if (!stores) return;
 
-
   stores.forEach((s) => {
     const { mapState, instance, store, watch, mapComputed } = s;
 
@@ -93,8 +92,6 @@ function createReactive<T extends object>(target: T): T {
           deps.get(key)?.add(item);
         });
       }
-      if (isObject(res)) return createReactive(res);
-
       return res;
     },
     set(target, key: string, value, receiver) {
@@ -107,6 +104,13 @@ function createReactive<T extends object>(target: T): T {
       return res;
     },
   });
+
+  for (let k in obj) {
+    const child = obj[k];
+    if (isObject(child)) {
+      obj[k] = createReactive(obj[k] as any) as any;
+    }
+  }
 
   return obj;
 }
@@ -165,6 +169,7 @@ export function defineStore<
   setupActions(plainStore, store);
   setupPatchOfStore(plainStore, store);
   setupComputed(computed, store);
+  
   return function useStore(
     instance: Instance,
     options: BaseStoreOptionItem | StoreOptionItem

@@ -48,7 +48,7 @@ dist.throttle;
 const setTip = (function () {
     setTimeout(() => {
         function tip(text) {
-            console.error(`必须在 app.js 文件 调用 ${text}()，参考：https://www.npmjs.com/package/@savage181855/mini-store`);
+            console.error(`必须在 app.js|ts 文件 调用 ${text}()，参考：https://www.npmjs.com/package/@savage181855/mini-store`);
         }
         if (!types.isProxyPage)
             tip("proxyPage");
@@ -132,8 +132,6 @@ function createReactive(target) {
                     (_a = deps.get(key)) === null || _a === void 0 ? void 0 : _a.add(item);
                 });
             }
-            if (dist_7(res))
-                return createReactive(res);
             return res;
         },
         set(target, key, value, receiver) {
@@ -147,6 +145,12 @@ function createReactive(target) {
             return res;
         },
     });
+    for (let k in obj) {
+        const child = obj[k];
+        if (dist_7(child)) {
+            obj[k] = createReactive(obj[k]);
+        }
+    }
     return obj;
 }
 // not pure function
@@ -376,16 +380,5 @@ function mixinHooks(hooks, newOptions, globalOptions, options) {
     });
     return newO;
 }
-
-defineStore({
-    state: {
-        count: 0
-    },
-    actions: {
-        add() {
-            this.add;
-        }
-    }
-});
 
 export { clearStoreDep, defineStore, proxyApp, proxyComponent, proxyPage, removeStoreDep, updateStoreState };

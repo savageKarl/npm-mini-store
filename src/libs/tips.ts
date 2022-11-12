@@ -2,7 +2,7 @@ export const setTip = (function () {
   setTimeout(() => {
     function tip(text: string) {
       console.error(
-        `必须在 app.js 文件 调用 ${text}()，参考：https://www.npmjs.com/package/@savage181855/mini-store`
+        `必须在 app.js|ts 文件 调用 ${text}()，参考：https://www.npmjs.com/package/@savage181855/mini-store`
       );
     }
     if (!types.isProxyPage) tip("proxyPage");

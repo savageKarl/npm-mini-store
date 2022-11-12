@@ -1,6 +1,7 @@
 import { proxyApp, proxyPage, proxyComponent } from "./libs/index";
 
-import { useAppStore } from "./store";
+import { useAppStore } from "./store/appStore";
+import { userStore } from "./store/userStore";
 
 proxyApp();
 proxyPage({
@@ -21,8 +22,11 @@ App({
       storeKey: "appStore",
       useStoreRef: useAppStore,
     },
+    {
+      storeKey: "userStore",
+      useStoreRef: userStore,
+    },
   ],
   onLaunch() {
-    // console.debug(this);
   },
 });

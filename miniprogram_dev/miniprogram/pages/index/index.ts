@@ -1,28 +1,29 @@
-import { useAppStore } from "../../store";
+import { useAppStore } from "../../store/appStore";
+import { userStore } from "../../store/userStore";
 
 Page({
   stores: [
     {
       storeKey: "appStore",
       useStoreRef: useAppStore,
-      mapState: ["count", "user"],
-      mapComputed: ["fullname"],
+      mapState: ["count"],
       watch: {
-        user(oldValue: any, value: any) {
-          console.debug("user", oldValue, value);
-        },
         count(oldValue: any, value: any) {
           console.debug("count", oldValue, value);
         },
-        firstname(oldValue: any, value: any) {
-          console.debug("firstname", oldValue, value);
+      },
+    },
+    {
+      storeKey: "userStore",
+      useStoreRef: userStore,
+      mapState: ["user"],
+      mapComputed: ["fullname"],
+      watch: {
+        user(oldValue: any, value: any) {
+          // console.debug("user", oldValue, value);
         },
       },
     },
-    // {
-    //   storeKey: "indexStore",
-    //   useStoreRef: useAppStore,
-    // },
   ],
   data: {
     show: false,
@@ -38,13 +39,10 @@ Page({
     // this.appStore.increment();
     // return;
     this.appStore.patch((store: any) => {
-      // for (let i = 1; i < 10; i++) {
-      //   store.user.age += 1;
-      //   store.count += 1;
-      //   console.info(store.user.age)
-      // }
-      store.firstname='foo'
-      store.count+=1
+      // store.user.age += 2;
+      store.user.firstname='foo'
+      // store.count+=1
+      console.debug(store)
     });
   },
 });
