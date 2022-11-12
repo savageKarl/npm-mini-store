@@ -51,7 +51,7 @@ export function proxyApp() {
   };
 }
 
-export function proxyPage(globalOptions: PageOptions) {
+export function proxyPage(globalOptions: PageOptions = {}) {
   setTip("isProxyPage");
 
   const OriginPage = Page;
@@ -95,7 +95,7 @@ export function proxyPage(globalOptions: PageOptions) {
   };
 }
 
-export function proxyComponent(globalOptions: ComponentOptions) {
+export function proxyComponent(globalOptions: ComponentOptions = {}) {
   setTip("isProxyComponent");
 
   const OriginComponent = Component;

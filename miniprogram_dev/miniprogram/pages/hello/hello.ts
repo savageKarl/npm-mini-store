@@ -12,9 +12,12 @@ Component({
     {
       storeKey: "appStore",
       useStoreRef: useAppStore,
-      mapState: ['count'],
+      mapState: ["count"],
+      mapComputed: ["dbCount"],
       watch: {
-
+        count(oldV, vlaue) {
+          console.debug("fuck", oldV, vlaue);
+        },
       },
     },
     // {
@@ -22,31 +25,24 @@ Component({
     //   useStoreRef: useAppStore,
     // },
   ],
-  properties: {
-
-  },
+  properties: {},
 
   /**
    * 组件的初始数据
    */
-  data: {
-
-  },
+  data: {},
 
   /**
    * 组件的方法列表
    */
-  methods: {
-
-  },
+  methods: {},
   lifetimes: {
     attached() {
       console.debug(this);
-    }}
-})
+    },
+  },
+});
 
-const a = {name: 'a'}
+const a = { name: "a" };
 
-
-const b = new Proxy(a, {})
-
+const b = new Proxy(a, {});

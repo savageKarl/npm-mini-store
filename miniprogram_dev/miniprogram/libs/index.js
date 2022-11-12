@@ -158,7 +158,7 @@ function createReactive(target) {
 function setupActions(plainStore, proxyStore) {
     for (let k in plainStore) {
         if (typeof plainStore[k] === "function") {
-            plainStore[k] = plainStore[k].bind(proxyStore);
+            plainStore[k] = plainStore[k].bind(proxyStore, proxyStore);
         }
     }
 }
@@ -279,7 +279,7 @@ function proxyApp() {
         return originApp(newOptions);
     };
 }
-function proxyPage(globalOptions) {
+function proxyPage(globalOptions = {}) {
     setTip("isProxyPage");
     const OriginPage = Page;
     Page = function (options) {
@@ -316,7 +316,7 @@ function proxyPage(globalOptions) {
         return OriginPage(newOptions);
     };
 }
-function proxyComponent(globalOptions) {
+function proxyComponent(globalOptions = {}) {
     setTip("isProxyComponent");
     const OriginComponent = Component;
     Component = function (options) {

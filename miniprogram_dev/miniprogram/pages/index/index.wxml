@@ -1,14 +1,21 @@
 <view>
-  <view>{{user.age}}</view>
-  <view>{{count}}</view>
-  <view>{{fullname}}</view>
-  <button bindtap="onAdd">+ 1</button>
-  <button bindtap="increment">+ 1</button>
+  <view>user.age：{{user.age}}</view>
+  <view>count：{{count}}</view>
+  <view>fullname：{{fullname}}</view>
+  <view>dbCount：{{dbCount}}</view>
+  <button bindtap="onIncrement1" size="mini">onIncrement1</button>
+  <button bindtap="onIncrement2" size="mini">onIncrement2</button>
+  <button bindtap="onIncrement3" size="mini">onIncrement3</button>
+  <button bindtap="onIncrement4" size="mini">onIncrement4</button>
+
+  <button bindtap="changeName" type="primary" size="mini">userStore.changeName</button>
+
   <navigator url="/pages/log/log" open-type="redirect">
-    <button type="primary">
+    <button type="primary" size="mini">
       跳转
     </button>
   </navigator>
   <hello wx:if="{{show}}" />
   <button bindtap="onChangeToggle" size="mini">切换</button>
+
 </view>

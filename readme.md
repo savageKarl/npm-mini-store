@@ -10,14 +10,16 @@
 - **灵活**
 - **渐进式**
 - **模块化**
+
 ## 功能
 
 - **支持多个`store`**
 - **支持`computed`计算属性**
 - **支持`watch`监听**
+- **支持`state`映射到页面或组件实例**
+- **支持`actions`映射到页面或组件实例**
 - **支持按需渲染**
 - **支持惰性渲染**
-
 
 ## 安装
 
@@ -30,100 +32,161 @@ npm i @savage181855/mini-store -S
 在`app.js`文件调用全局 api，这一步是必须的！！！
 
 ```javascript
-import { proxyPage, proxyComponent,proxyApp } from "@savage181855/mini-store";
+import { proxyPage, proxyComponent, proxyApp } from "@savage181855/mini-store";
 
+// 代理 App，让 App可以使用状态管理工具
+proxyApp();
 // 代理页面，让页面可以使用状态管理工具
 proxyPage();
 // 代理页面，让组件可以使用状态管理工具
 proxyComponent();
-// 代理 App，让 App可以使用状态管理工具
-proxyApp();
+
 // 这样子就结束了，很简单
 ```
 
 定义`store/appStore.js`文件
 
 ```javascript
-import { defineStore } from "@savage181855/mini-store";
+import { defineStore } from "../libs/index";
 
-const useStore = defineStore({
+export const useAppStore = defineStore({
   state: {
     count: 0,
   },
   actions: {
     increment() {
-      this.count++;
+      // this 指向 store，可以直接访问 this.count
+      this.count += 1;
+    },
+  },
+  computed: {
+    dbCount(store) {
+      // this 指向 store，可以直接访问 this.count
+      return store.count * 2;
     },
   },
 });
-
-export default useStore;
 ```
 
 定义`store/userStore.js`文件
 
 ```javascript
-import { defineStore } from "@savage181855/mini-store";
+import { defineStore } from "../libs/index";
 
-const useStore = defineStore({
+export const userStore = defineStore({
   state: {
-    count: 0,
+    user: {
+      age: 0,
+      firstname: "greet",
+      lastname: "bar",
+    },
   },
   actions: {
-    increment() {
-      this.count++;
+    changeName(state) {
+      state.user.firstname = "foo";
+    },
+  },
+  computed: {
+    fullname(state) {
+      return state.user.firstname + state.user.lastname;
     },
   },
 });
-
-export default useStore;
 ```
+
 ### 在`app`里面使用`store`
 
 `app.js`文件
 
 ```javascript
+import { proxyApp, proxyPage, proxyComponent } from "./libs/index";
 
+import { useAppStore } from "./store/appStore";
+import { userStore } from "./store/userStore";
+
+proxyApp();
+proxyPage();
+proxyComponent();
+
+App({
+  stores: [
+    {
+      // 引入 store，这里要注意，传入 useAppStore 即可
+      useStoreRef: useAppStore,
+      // 表示当前使用store的名字，可以在 this.appStore 获取 store
+      storeKey: "appStore",
+    },
+    {
+      storeKey: "userStore",
+      useStoreRef: userStore,
+    },
+  ],
+  onLaunch() {
+    console.debug(this.appStore);
+    console.debug(this.userStore);
+  },
+});
 ```
 
 ### 在`page`里面使用`store`
 
-
 `indexA.js`页面
 
 ```javascript
-// 导入定义的 useStore
-import useStore from "../../store/store";
+import { useAppStore } from "../../store/appStore";
+import { userStore } from "../../store/userStore";
+
 Page({
-  // 注意：这里使用 useStore 即可，可以在this.data.store 访问 store
-  useStoreRef: useStore,
-  // 表示需要使用的全局状态，会自动挂载在到当前data里面，自带响应式
-  mapState: ["count"],
-  // 表示想要映射的全局actions，可以直接在当前页面调用 ，例如：this.increment()
-  mapActions: ["increment"],
-  watch: {
-    count(oldValue, value) {
-      // 可以访问当前页面的实例 this
-      console.debug(this);
-      console.debug(oldValue, value, "count change");
+  stores: [
+    {
+      // 引入 store，这里要注意，传入 useAppStore 即可
+      useStoreRef: useAppStore,
+      // 表示当前使用store的名字，可以在 this.appStore 获取 store
+      storeKey: "appStore",
+      // 表示需要使用的全局状态，会自动挂载在到当前页面或组件实例 data 里面，自带响应式
+      mapState: ["count"],
+      // 表示需要使用的计算属性，会自动挂载在到当前页面或组件实例 data 里面，自带响应式
+      mapComputed: ["dbCount"],
+      // 表示想要映射的全局 actions，可以直接在当前页面调用 ，例如：this.increment()
+      mapActions: ["increment"],
+      // 表示要监听的 state 字段
+      watch: {
+        count(oldValue: any, value: any) {
+          // 可以访问当前页面或组件的实例 this
+          console.debug(this);
+          console.debug("count", oldValue, value);
+        },
+      },
     },
-  },
+    {
+      storeKey: "userStore",
+      useStoreRef: userStore,
+      mapState: ["user"],
+      mapActions: ["changeName"],
+      mapComputed: ["fullname"],
+      watch: {
+        user(oldValue: any, value: any) {
+          console.debug("user", oldValue, value);
+        },
+      },
+    },
+  ],
   onIncrement1() {
     // 不推荐
-    this.data.store.count++;
+    this.appStore.count++;
   },
   onIncrement2() {
-    this.data.store.patch({
-      count: this.data.store.count + 1,
+    this.appStore.patch({
+      count: this.appStore.count + 1,
     });
   },
   onIncrement3() {
-    this.data.store.patch((store) => {
+    this.appStore.patch((store) => {
       store.count++;
     });
   },
   onIncrement4() {
-    this.data.store.increment();
+    this.appStore.increment();
   },
 });
 ```
@@ -132,40 +195,43 @@ Page({
 
 ```html
 <view>
-  <view>indexA</view>
-  <view>{{count}}</view>
-  <button type="primary" bindtap="increment">+1</button>
-  <button type="primary" bindtap="onIncrement1">+1</button>
-  <button type="primary" bindtap="onIncrement2">+1</button>
-  <button type="primary" bindtap="onIncrement3">+1</button>
-  <button type="primary" bindtap="onIncrement4">+1</button>
-</view>
-```
+  <view>user.age: {{user.age}}</view>
+  <view>count: {{count}}</view>
+  <view>dbCount：{{dbCount}}</view>
+  <view>fullname: {{fullname}}</view>
+  <button bindtap="onIncrement1" size="mini">onIncrement1</button>
+  <button bindtap="onIncrement2" size="mini">onIncrement2</button>
+  <button bindtap="onIncrement3" size="mini">onIncrement3</button>
+  <button bindtap="onIncrement4" size="mini">onIncrement4</button>
 
-`indexB.js`页面
-
-```javascript
-// 导入定义的 useStore
-import useStore from "../xxxx/store.js";
-
-Page({
-  // 注意：这里使用 useStore 即可，可以在 this.data.store 访问 store
-  useStoreRef: useStore,
-  // 表示需要使用的全局状态，会自动挂载在到当前data里面，自带响应式
-  mapState: ["count"],
-});
-```
-
-`indexB.wxml`
-
-```html
-<view>
-  <view>indexB</view>
-  <view>{{count}}</view>
+  <button bindtap="changeName" type="primary" size="mini">
+    userStore.changeName
+  </button>
 </view>
 ```
 
 ### 在`component`里面使用`store`
+
+**组件和页面的使用方式是一样的！**
+
+### 注意
+
+在`App`里面只能使用`useStoreRef`和`storeKey`;
+
+`Page`和`Component`可以使用
+
+- `useStoreRef`
+- `mapState`
+- `storeKey`
+- `mapActions`
+- `mapComputed`
+- `watch`
+
+## 使用建议
+
+`mapState`和`mapComputed`都是会映射到页面或组件实例的`data`里面，也就是说，可以直接在视图里面使用，当使用的`store`的数据改变时，会进行diff之后，然后进行`this.setData`。
+
+如果不是要在视图里面直接访问`store`的数据，那么最好少用`mapState`和`mapComputed`，使用`this.xxxx`来访问`store`，来达到性能最大化。
 
 ## 全局混入
 
@@ -174,6 +240,8 @@ Page({
 ```javascript
 import { proxyPage, proxyComponent } from "@savage181855/mini-store";
 
+// 代理 App，让 App可以使用状态管理工具
+proxyApp();
 // 这里的配置可以跟页面的配置一样，但是有一些规则
 // 'onShow', 'onReady', 'onHide', 'onUnload', 'onPullDownRefresh', 'onReachBottom',
 // 'onPageScroll', 'onResize', 'onTabItemTap'等方法，全局的和页面会合并，其余的方法，页面会覆盖全局的。
@@ -205,8 +273,3 @@ proxyComponent({
   },
 });
 ```
-
-## 代码片段
-
-https://developers.weixin.qq.com/s/ZO0SX2mr7xDj
-

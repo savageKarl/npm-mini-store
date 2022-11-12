@@ -10,7 +10,7 @@ export const userStore = defineStore({
   },
   actions: {
     changeName(state) {
-      state.firstname = 'foo';
+      state.user.firstname = 'foo';
     },
   },
   computed: {

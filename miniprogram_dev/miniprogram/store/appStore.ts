@@ -1,4 +1,4 @@
-import {defineStore} from '../libs/index'
+import { defineStore } from "../libs/index";
 
 export const useAppStore = defineStore({
   state: {
@@ -6,12 +6,14 @@ export const useAppStore = defineStore({
   },
   actions: {
     increment() {
+      // this 指向 store，可以直接访问 this.count
       this.count += 1;
-    }
+    },
   },
   computed: {
-    dbCount(state) {
-      return state.count * 2;
-    }
-  }
-})
+    dbCount(store) {
+      // this 指向 store，可以直接访问 this.count
+      return store.count * 2;
+    },
+  },
+});

@@ -120,7 +120,7 @@ function createReactive<T extends object>(target: T): T {
 function setupActions(plainStore: StateType, proxyStore: StateType) {
   for (let k in plainStore) {
     if (typeof plainStore[k] === "function") {
-      plainStore[k] = (plainStore[k] as Function).bind(proxyStore);
+      plainStore[k] = (plainStore[k] as Function).bind(proxyStore, proxyStore);
     }
   }
 }

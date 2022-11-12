@@ -2,4 +2,5 @@
 <!--pages/hello/hello.wxml-->
 <text>pages/hello/hello.wxml</text>
 <view>{{count}}</view>
+<view>dbCount：{{dbCount}}</view>
 </view>
