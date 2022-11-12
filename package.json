@@ -1,8 +1,9 @@
 {
   "name": "@savage181855/mini-store",
-  "version": "1.0.20",
+  "version": "2.0.1",
   "description": "微信小程序全局状态管理器",
-  "main": "dist/index.js",
+  "main": "miniprogram_dist/index.js",
+  "miniprogram": "miniprogram_dist",
   "license": "GPLv3",
   "keywords": [
     "mini-store",
@@ -17,13 +18,11 @@
     "微信小程序状态管理"
   ],
   "author": {
-    "name": "savage",
-    "email": "2443005004@qq.com",
-    "url": "https://github.com/savage181855/"
+    "name": "savage"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/savage181855/mini-store"
+    "url": "https://github.com/savage181855/mini-store-v2"
   },
   "scripts": {
     "devComponent": "cross-env NODE_ENV=dev gulp watch",
@@ -37,7 +36,6 @@
     "/miniprogram_dist",
     "readme.md"
   ],
-  "miniprogram": "miniprogram_dist",
   "devDependencies": {
     "@babel/core": "^7.19.6",
     "@babel/preset-env": "^7.19.4",

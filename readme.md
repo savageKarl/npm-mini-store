@@ -47,7 +47,7 @@ proxyComponent();
 定义`store/appStore.js`文件
 
 ```javascript
-import { defineStore } from "../libs/index";
+import { defineStore } from "@savage181855/mini-store";
 
 export const useAppStore = defineStore({
   state: {
@@ -71,7 +71,7 @@ export const useAppStore = defineStore({
 定义`store/userStore.js`文件
 
 ```javascript
-import { defineStore } from "../libs/index";
+import { defineStore } from "@savage181855/mini-store";
 
 export const userStore = defineStore({
   state: {
@@ -99,7 +99,7 @@ export const userStore = defineStore({
 `app.js`文件
 
 ```javascript
-import { proxyApp, proxyPage, proxyComponent } from "./libs/index";
+import { proxyApp, proxyPage, proxyComponent } from "@savage181855/mini-store";
 
 import { useAppStore } from "./store/appStore";
 import { userStore } from "./store/userStore";
@@ -147,11 +147,11 @@ Page({
       mapState: ["count"],
       // 表示需要使用的计算属性，会自动挂载在到当前页面或组件实例 data 里面，自带响应式
       mapComputed: ["dbCount"],
-      // 表示想要映射的全局 actions，可以直接在当前页面调用 ，例如：this.increment()
+      // 表示想要映射的store actions，可以直接在当前页面调用 ，例如：this.increment()
       mapActions: ["increment"],
       // 表示要监听的 state 字段
       watch: {
-        count(oldValue: any, value: any) {
+        count(oldValue, value) {
           // 可以访问当前页面或组件的实例 this
           console.debug(this);
           console.debug("count", oldValue, value);
@@ -165,7 +165,7 @@ Page({
       mapActions: ["changeName"],
       mapComputed: ["fullname"],
       watch: {
-        user(oldValue: any, value: any) {
+        user(oldValue, value) {
           console.debug("user", oldValue, value);
         },
       },
@@ -199,6 +199,7 @@ Page({
   <view>count: {{count}}</view>
   <view>dbCount：{{dbCount}}</view>
   <view>fullname: {{fullname}}</view>
+  
   <button bindtap="onIncrement1" size="mini">onIncrement1</button>
   <button bindtap="onIncrement2" size="mini">onIncrement2</button>
   <button bindtap="onIncrement3" size="mini">onIncrement3</button>
