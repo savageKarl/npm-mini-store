@@ -7,9 +7,10 @@ Page({
       storeKey: "appStore",
       useStoreRef: useAppStore,
       mapState: ["count"],
+      mapActions: ["increment"],
       watch: {
         count(oldValue: any, value: any) {
-          console.debug("count", oldValue, value);
+          console.debug("count", oldValue, value, this);
         },
       },
     },
@@ -20,7 +21,7 @@ Page({
       mapComputed: ["fullname"],
       watch: {
         user(oldValue: any, value: any) {
-          // console.debug("user", oldValue, value);
+          console.debug("user", oldValue, value);
         },
       },
     },
@@ -28,21 +29,13 @@ Page({
   data: {
     show: false,
   },
-  onLoad() {
-    // console.debug(this, '执行')
-    // console.debug(this.route);
-  },
   onChangeToggle() {
     this.setData({ show: !this.data.show });
   },
+  onLoad() {
+    // console.debug('onload')
+  },
   onAdd() {
-    // this.appStore.increment();
-    // return;
-    this.appStore.patch((store: any) => {
-      // store.user.age += 2;
-      store.user.firstname='foo'
-      // store.count+=1
-      console.debug(store)
-    });
+    this.appStore.increment();
   },
 });

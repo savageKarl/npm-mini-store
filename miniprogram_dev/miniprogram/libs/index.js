@@ -102,6 +102,7 @@ function updateStoreState() {
             Object.keys(watch).forEach((key) => {
                 if (!dist_8(instance.watchValue[key], store[key])) {
                     const newValue = dist_2(store[key]);
+                    watch[key] = watch[key].bind(instance);
                     watch[key](instance.watchValue[key], newValue);
                     instance.watchValue[key] = newValue;
                 }
@@ -188,7 +189,8 @@ function setupComputed(fns, proxyStore) {
 function defineStore(options) {
     const state = options.state;
     const computed = options.computed;
-    const plainStore = Object.assign(Object.assign(Object.assign({}, state), options.actions), computed);
+    const actions = options.actions;
+    const plainStore = Object.assign(Object.assign(Object.assign({}, state), actions), computed);
     const store = createReactive(plainStore);
     setupActions(plainStore, store);
     setupPatchOfStore(plainStore, store);
@@ -197,6 +199,7 @@ function defineStore(options) {
         instance[options.storeKey] = store;
         if (instance.type === "app")
             return;
+        // ;debugger;
         const o = options;
         const stateKeys = Object.keys(state);
         if (o.mapState) {
@@ -219,7 +222,7 @@ function defineStore(options) {
                 }
                 watchValue[key] = dist_2(store[key]);
             });
-            instance.watchValue = watchValue;
+            instance.watchValue = Object.assign(Object.assign({}, instance.watchValue), watchValue);
         }
         if (o.mapComputed) {
             // use to compare computed function whether to execute
@@ -232,9 +235,26 @@ function defineStore(options) {
                 }
             });
         }
+        if (o.mapActions) {
+            // use to compare computed function whether to execute
+            const actionKeys = Object.keys(actions);
+            o.mapActions.forEach((key) => {
+                if (!actionKeys.includes(key)) {
+                    console.error(`msg: mapActions "${key}" not in ${o.storeKey};\n\n` +
+                        `info: filePath: ${instance.is};`);
+                    return;
+                }
+                instance[key] = store[key];
+            });
+        }
         const route = instance.route;
         depStores[route] = depStores[route] || [];
-        depStores[route].push(Object.assign(Object.assign({}, o), { instance: instance, store }));
+        const isExist = depStores[route].some((v) => {
+            return v.instance === instance && v.store === store;
+        });
+        if (!isExist) {
+            depStores[route].push(Object.assign(Object.assign({}, o), { instance: instance, store }));
+        }
     };
 }
 

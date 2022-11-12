@@ -57,6 +57,7 @@ export function updateStoreState() {
       Object.keys(watch).forEach((key) => {
         if (!isSameDeep(instance.watchValue[key], store[key])) {
           const newValue = deepClone(store[key]);
+          watch[key] = watch[key].bind(instance);
           watch[key](instance.watchValue[key], newValue);
           instance.watchValue[key] = newValue;
         }
@@ -158,10 +159,11 @@ export function defineStore<
 >(options: Options<S, A, C>) {
   const state = options.state;
   const computed = options.computed as any as Record<string, Callback>;
+  const actions = options.actions as any as Record<string, Callback>;
 
   const plainStore = {
     ...state,
-    ...options.actions,
+    ...actions,
     ...computed,
   };
 
@@ -169,14 +171,14 @@ export function defineStore<
   setupActions(plainStore, store);
   setupPatchOfStore(plainStore, store);
   setupComputed(computed, store);
-  
+
   return function useStore(
     instance: Instance,
     options: BaseStoreOptionItem | StoreOptionItem
   ) {
     instance[options.storeKey as keyof typeof instance] = store;
     if (instance.type === "app") return;
-
+    // ;debugger;
     const o = options as StoreOptionItem;
 
     const stateKeys = Object.keys(state);
@@ -205,7 +207,7 @@ export function defineStore<
         }
         watchValue[key] = deepClone(store[key]);
       });
-      instance.watchValue = watchValue;
+      instance.watchValue = { ...(instance.watchValue as any), ...watchValue };
     }
 
     if (o.mapComputed) {
@@ -222,13 +224,37 @@ export function defineStore<
       });
     }
 
+
+    if (o.mapActions) {
+      // use to compare computed function whether to execute
+      const actionKeys = Object.keys(actions);
+      o.mapActions.forEach((key) => {
+        if (!actionKeys.includes(key)) {
+          console.error(
+            `msg: mapActions "${key}" not in ${o.storeKey};\n\n` +
+              `info: filePath: ${instance.is};`
+          );
+          return;
+        }
+        instance[key] = store[key];
+
+      });
+    }
+
     const route = instance.route as keyof typeof instance as string;
 
     depStores[route] = depStores[route] || [];
-    depStores[route].push({
-      ...o,
-      instance: instance as PageInstance | ComponentInstance,
-      store,
+
+    const isExist = depStores[route].some((v) => {
+      return v.instance === instance && v.store === store;
     });
+
+    if (!isExist) {
+      depStores[route].push({
+        ...o,
+        instance: instance as PageInstance | ComponentInstance,
+        store,
+      });
+    }
   };
 }

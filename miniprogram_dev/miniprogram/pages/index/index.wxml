@@ -1,10 +1,14 @@
 <view>
-  <view>hello, world</view>
   <view>{{user.age}}</view>
   <view>{{count}}</view>
   <view>{{fullname}}</view>
-  <button bindtap="onAdd">add 1</button>
-  <navigator url="/pages/log/log" open-type="redirect">调整</navigator>
+  <button bindtap="onAdd">+ 1</button>
+  <button bindtap="increment">+ 1</button>
+  <navigator url="/pages/log/log" open-type="redirect">
+    <button type="primary">
+      跳转
+    </button>
+  </navigator>
   <hello wx:if="{{show}}" />
-  <button bindtap="onChangeToggle">切换</button>
+  <button bindtap="onChangeToggle" size="mini">切换</button>
 </view>

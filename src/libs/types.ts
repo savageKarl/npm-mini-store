@@ -5,6 +5,7 @@ export type BaseStoreOptionItem = {
 
 export type StoreOptionItem = BaseStoreOptionItem & {
   mapState?: string[];
+  mapActions?: string[];
   mapComputed?: string[];
   watch?: Record<string, (oldV: any, v: any) => any>;
 };
