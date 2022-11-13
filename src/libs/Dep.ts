@@ -5,10 +5,7 @@ import type {
   ComponentInstance,
 } from "./types";
 
-import {
-  deepClone,
-  isSameDeep,
-} from "@savage181855/utils";
+import { deepClone, isSameDeep } from "@savage181855/utils";
 
 import { getCurrentPagePath } from "./utils";
 export class Dep extends Map<any, Set<Callback>> {
@@ -35,7 +32,7 @@ export function updateStoreState() {
     stateArr?.forEach((key) => {
       if (
         !isSameDeep(
-          instance.data[key as keyof typeof instance.data],
+          instance.data[key as keyof typeof instance.data] as any,
           store[key]
         )
       ) {
