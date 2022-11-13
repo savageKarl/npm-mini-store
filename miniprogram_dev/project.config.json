@@ -16,7 +16,14 @@
       "disablePlugins": [],
       "outputPath": ""
     },
-    "ignoreUploadUnusedFiles": true
+    "ignoreUploadUnusedFiles": true,
+    "packNpmManually": true,
+    "packNpmRelationList": [
+      {
+        "packageJsonPath": "./package.json",
+        "miniprogramNpmDistDir": "./"
+      }
+    ]
   },
   "simulatorType": "wechat",
   "simulatorPluginLibVersion": {},

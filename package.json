@@ -1,6 +1,6 @@
 {
   "name": "@savage181855/mini-store",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "微信小程序全局状态管理器",
   "main": "miniprogram_dist/index.js",
   "miniprogram": "miniprogram_dist",

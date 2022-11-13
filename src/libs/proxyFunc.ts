@@ -15,7 +15,7 @@ import type {
 
 import { setTip } from "./tips";
 
-import { updateStoreState, clearStoreDep, removeStoreDep } from "./defineStore";
+import { updateStoreState, clearStoreDep, removeStoreDep } from "./dep";
 
 import { getCurrentPagePath } from "./utils";
 
@@ -180,8 +180,8 @@ function mixinHooks(
     const indexOne = paths[0];
     if (len === 1) {
       newO[indexOne] = function () {
-        globalOptions?.[indexOne]?.call(this, ...arguments);
-        options?.[indexOne]?.call(this, ...arguments);
+        globalOptions?.[indexOne]?.call(this, ...Array.from(arguments));
+        options?.[indexOne]?.call(this, ...Array.from(arguments));
       };
     } else {
       const indexTwo = paths[1];
@@ -191,8 +191,8 @@ function mixinHooks(
         options?.[indexOne]?.[indexTwo]
       ) {
         newO[indexOne][indexTwo] = function () {
-          globalOptions?.[indexOne]?.[indexTwo]?.call(this, ...arguments);
-          options?.[indexOne]?.[indexTwo]?.call(this, ...arguments);
+          globalOptions?.[indexOne]?.[indexTwo]?.call(this, ...Array.from(arguments));
+          options?.[indexOne]?.[indexTwo]?.call(this, ...Array.from(arguments));
         };
       }
     }

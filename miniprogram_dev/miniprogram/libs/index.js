@@ -73,14 +73,16 @@ function getCurrentPagePath() {
     return ((_a = pages[pages.length - 1]) === null || _a === void 0 ? void 0 : _a.route) || '';
 }
 
-const depStores = {};
-const Dep = [];
+class Dep extends Map {
+}
+Dep.stores = {};
+Dep.stack = [];
 // not pure function
 function updateStoreState() {
     const path = getCurrentPagePath();
     if (!path)
         return;
-    const stores = depStores[path];
+    const stores = Dep.stores[path];
     if (!stores)
         return;
     stores.forEach((s) => {
@@ -112,150 +114,12 @@ function updateStoreState() {
 }
 function clearStoreDep() {
     const path = getCurrentPagePath();
-    depStores[path] = [];
+    Dep.stores[path] = [];
 }
 // not pure function
 function removeStoreDep(instance) {
     const path = getCurrentPagePath();
-    depStores[path] = depStores[path].filter((item) => item.instance !== instance);
-}
-// not pure function
-function createReactive(target) {
-    const deps = new Map();
-    const obj = new Proxy(target, {
-        get(target, key, receiver) {
-            const res = Reflect.get(target, key, receiver);
-            if (Dep.length > 0) {
-                if (!deps.get(key))
-                    deps.set(key, new Set());
-                Dep.forEach((item) => {
-                    var _a;
-                    (_a = deps.get(key)) === null || _a === void 0 ? void 0 : _a.add(item);
-                });
-            }
-            return res;
-        },
-        set(target, key, value, receiver) {
-            var _a;
-            const oldV = dist_2(target[key]);
-            const res = Reflect.set(target, key, value, receiver);
-            if (dist_5(oldV, value)) {
-                (_a = deps.get(key)) === null || _a === void 0 ? void 0 : _a.forEach((item) => item(oldV, value));
-            }
-            updateStoreState();
-            return res;
-        },
-    });
-    for (let k in obj) {
-        const child = obj[k];
-        if (dist_7(child)) {
-            obj[k] = createReactive(obj[k]);
-        }
-    }
-    return obj;
-}
-// not pure function
-function setupActions(plainStore, proxyStore) {
-    for (let k in plainStore) {
-        if (typeof plainStore[k] === "function") {
-            plainStore[k] = plainStore[k].bind(proxyStore, proxyStore);
-        }
-    }
-}
-// not pure function
-function setupPatchOfStore(plainStore, proxyStore) {
-    plainStore.patch = function (val) {
-        if (typeof val === "object") {
-            for (let k in val) {
-                proxyStore[k] = val[k];
-            }
-        }
-        if (typeof val === "function") {
-            val(proxyStore);
-        }
-    };
-}
-// not pure function
-function setupComputed(fns, proxyStore) {
-    if (fns) {
-        for (let k in fns) {
-            fns[k] = fns[k].bind(proxyStore, proxyStore);
-            Dep.push(() => (proxyStore[k] = fns[k]()));
-            proxyStore[k] = fns[k]();
-            Dep.pop();
-        }
-    }
-}
-function defineStore(options) {
-    const state = options.state;
-    const computed = options.computed;
-    const actions = options.actions;
-    const plainStore = Object.assign(Object.assign(Object.assign({}, state), actions), computed);
-    const store = createReactive(plainStore);
-    setupActions(plainStore, store);
-    setupPatchOfStore(plainStore, store);
-    setupComputed(computed, store);
-    return function useStore(instance, options) {
-        instance[options.storeKey] = store;
-        if (instance.type === "app")
-            return;
-        // ;debugger;
-        const o = options;
-        const stateKeys = Object.keys(state);
-        if (o.mapState) {
-            o.mapState.forEach((key) => {
-                if (!stateKeys.includes(key)) {
-                    console.error(`msg: mapState "${key}" not in ${o.storeKey};\n\n` +
-                        `info: filePath: ${instance.is};`);
-                    return;
-                }
-            });
-        }
-        if (o.watch) {
-            // use to compare watch whether to execute
-            const watchValue = {};
-            Object.keys(o.watch).forEach((key) => {
-                if (!stateKeys.includes(key)) {
-                    console.error(`msg: watch "${key}" not in ${o.storeKey};\n\n` +
-                        `info: filePath: ${instance.is};`);
-                    return;
-                }
-                watchValue[key] = dist_2(store[key]);
-            });
-            instance.watchValue = Object.assign(Object.assign({}, instance.watchValue), watchValue);
-        }
-        if (o.mapComputed) {
-            // use to compare computed function whether to execute
-            const computedKeys = Object.keys(computed);
-            o.mapComputed.forEach((key) => {
-                if (!computedKeys.includes(key)) {
-                    console.error(`msg: mapComputed "${key}" not in ${o.storeKey};\n\n` +
-                        `info: filePath: ${instance.is};`);
-                    return;
-                }
-            });
-        }
-        if (o.mapActions) {
-            // use to compare computed function whether to execute
-            const actionKeys = Object.keys(actions);
-            o.mapActions.forEach((key) => {
-                if (!actionKeys.includes(key)) {
-                    console.error(`msg: mapActions "${key}" not in ${o.storeKey};\n\n` +
-                        `info: filePath: ${instance.is};`);
-                    return;
-                }
-                instance[key] = store[key];
-            });
-        }
-        const route = instance.route;
-        depStores[route] = depStores[route] || [];
-        const isExist = depStores[route].some((v) => {
-            return v.instance === instance && v.store === store;
-        });
-        if (!isExist) {
-            depStores[route].push(Object.assign(Object.assign({}, o), { instance: instance, store }));
-        }
-    };
+    Dep.stores[path] = Dep.stores[path].filter((item) => item.instance !== instance);
 }
 
 function callUseStoreRef(instance, stores) {
@@ -381,8 +245,8 @@ function mixinHooks(hooks, newOptions, globalOptions, options) {
         if (len === 1) {
             newO[indexOne] = function () {
                 var _a, _b;
-                (_a = globalOptions === null || globalOptions === void 0 ? void 0 : globalOptions[indexOne]) === null || _a === void 0 ? void 0 : _a.call(this, ...arguments);
-                (_b = options === null || options === void 0 ? void 0 : options[indexOne]) === null || _b === void 0 ? void 0 : _b.call(this, ...arguments);
+                (_a = globalOptions === null || globalOptions === void 0 ? void 0 : globalOptions[indexOne]) === null || _a === void 0 ? void 0 : _a.call(this, ...Array.from(arguments));
+                (_b = options === null || options === void 0 ? void 0 : options[indexOne]) === null || _b === void 0 ? void 0 : _b.call(this, ...Array.from(arguments));
             };
         }
         else {
@@ -392,8 +256,8 @@ function mixinHooks(hooks, newOptions, globalOptions, options) {
                 ((_b = options === null || options === void 0 ? void 0 : options[indexOne]) === null || _b === void 0 ? void 0 : _b[indexTwo])) {
                 newO[indexOne][indexTwo] = function () {
                     var _a, _b, _c, _d;
-                    (_b = (_a = globalOptions === null || globalOptions === void 0 ? void 0 : globalOptions[indexOne]) === null || _a === void 0 ? void 0 : _a[indexTwo]) === null || _b === void 0 ? void 0 : _b.call(this, ...arguments);
-                    (_d = (_c = options === null || options === void 0 ? void 0 : options[indexOne]) === null || _c === void 0 ? void 0 : _c[indexTwo]) === null || _d === void 0 ? void 0 : _d.call(this, ...arguments);
+                    (_b = (_a = globalOptions === null || globalOptions === void 0 ? void 0 : globalOptions[indexOne]) === null || _a === void 0 ? void 0 : _a[indexTwo]) === null || _b === void 0 ? void 0 : _b.call(this, ...Array.from(arguments));
+                    (_d = (_c = options === null || options === void 0 ? void 0 : options[indexOne]) === null || _c === void 0 ? void 0 : _c[indexTwo]) === null || _d === void 0 ? void 0 : _d.call(this, ...Array.from(arguments));
                 };
             }
         }
@@ -401,4 +265,148 @@ function mixinHooks(hooks, newOptions, globalOptions, options) {
     return newO;
 }
 
-export { clearStoreDep, defineStore, proxyApp, proxyComponent, proxyPage, removeStoreDep, updateStoreState };
+// not pure function
+function createReactive(target) {
+    const deps = new Dep();
+    const obj = new Proxy(target, {
+        get(target, key, receiver) {
+            const res = Reflect.get(target, key, receiver);
+            if (Dep.stack.length > 0) {
+                if (!deps.get(key))
+                    deps.set(key, new Set());
+                Dep.stack.forEach((item) => {
+                    var _a;
+                    (_a = deps.get(key)) === null || _a === void 0 ? void 0 : _a.add(item);
+                });
+            }
+            return res;
+        },
+        set(target, key, value, receiver) {
+            var _a;
+            const oldV = dist_2(target[key]);
+            const res = Reflect.set(target, key, value, receiver);
+            if (dist_5(oldV, value)) {
+                (_a = deps.get(key)) === null || _a === void 0 ? void 0 : _a.forEach((item) => item(oldV, value));
+            }
+            updateStoreState();
+            return res;
+        },
+    });
+    for (let k in obj) {
+        const child = obj[k];
+        if (dist_7(child)) {
+            obj[k] = createReactive(obj[k]);
+        }
+    }
+    return obj;
+}
+// not pure function
+function setupActions(plainStore, proxyStore) {
+    for (let k in plainStore) {
+        if (typeof plainStore[k] === "function") {
+            plainStore[k] = plainStore[k].bind(proxyStore, proxyStore);
+        }
+    }
+}
+// not pure function
+function setupPatchOfStore(plainStore, proxyStore) {
+    plainStore.patch = function (val) {
+        if (typeof val === "object") {
+            for (let k in val) {
+                proxyStore[k] = val[k];
+            }
+        }
+        if (typeof val === "function") {
+            val(proxyStore);
+        }
+    };
+}
+// not pure function
+function setupComputed(fns, proxyStore) {
+    if (fns) {
+        for (let k in fns) {
+            fns[k] = fns[k].bind(proxyStore, proxyStore);
+            Dep.stack.push(() => (proxyStore[k] = fns[k]()));
+            proxyStore[k] = fns[k]();
+            Dep.stack.pop();
+        }
+    }
+}
+function createStore(options) {
+    const plainStore = Object.assign(Object.assign(Object.assign({}, options.state), options.actions), options.computed);
+    const store = createReactive(plainStore);
+    setupActions(plainStore, store);
+    setupPatchOfStore(plainStore, store);
+    setupComputed(options.computed, store);
+    return store;
+}
+
+function defineStore(options) {
+    const state = options.state;
+    const computed = options.computed;
+    const actions = options.actions;
+    const store = createStore(options);
+    return function useStore(instance, options) {
+        instance[options.storeKey] = store;
+        if (instance.type === "app")
+            return;
+        // ;debugger;
+        const o = options;
+        const stateKeys = Object.keys(state);
+        if (o.mapState) {
+            o.mapState.forEach((key) => {
+                if (!stateKeys.includes(key)) {
+                    console.error(`msg: mapState "${key}" not in ${o.storeKey};\n\n` +
+                        `info: filePath: ${instance.is};`);
+                    return;
+                }
+            });
+        }
+        if (o.watch) {
+            // use to compare watch whether to execute
+            const watchValue = {};
+            Object.keys(o.watch).forEach((key) => {
+                if (!stateKeys.includes(key)) {
+                    console.error(`msg: watch "${key}" not in ${o.storeKey};\n\n` +
+                        `info: filePath: ${instance.is};`);
+                    return;
+                }
+                watchValue[key] = dist_2(store[key]);
+            });
+            instance.watchValue = Object.assign(Object.assign({}, instance.watchValue), watchValue);
+        }
+        if (o.mapComputed) {
+            // use to compare computed function whether to execute
+            const computedKeys = Object.keys(computed);
+            o.mapComputed.forEach((key) => {
+                if (!computedKeys.includes(key)) {
+                    console.error(`msg: mapComputed "${key}" not in ${o.storeKey};\n\n` +
+                        `info: filePath: ${instance.is};`);
+                    return;
+                }
+            });
+        }
+        if (o.mapActions) {
+            // use to compare computed function whether to execute
+            const actionKeys = Object.keys(actions);
+            o.mapActions.forEach((key) => {
+                if (!actionKeys.includes(key)) {
+                    console.error(`msg: mapActions "${key}" not in ${o.storeKey};\n\n` +
+                        `info: filePath: ${instance.is};`);
+                    return;
+                }
+                instance[key] = store[key];
+            });
+        }
+        const route = instance.route;
+        Dep.stores[route] = Dep.stores[route] || [];
+        const isExist = Dep.stores[route].some((v) => {
+            return v.instance === instance && v.store === store;
+        });
+        if (!isExist) {
+            Dep.stores[route].push(Object.assign(Object.assign({}, o), { instance: instance, store }));
+        }
+    };
+}
+
+export { defineStore, proxyApp, proxyComponent, proxyPage };
