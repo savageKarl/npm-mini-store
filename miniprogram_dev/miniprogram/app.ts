@@ -25,3 +25,6 @@ App({
     console.debug(this.userStore);
   }
 });
+
+
+console.debug(Object.prototype.toString.call({}))

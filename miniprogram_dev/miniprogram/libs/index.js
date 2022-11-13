@@ -25,25 +25,81 @@ function __rest(s, e) {
     return t;
 }
 
-function createCommonjsModule(fn, module) {
-	return module = { exports: {} }, fn(module, module.exports), module.exports;
+// a[3].b -> a.3.b -> [a, 3, b]
+/** lodash get方法 */
+function getType(o) {
+    return Object.prototype.toString.call(o);
 }
-
-var dist = createCommonjsModule(function (module, exports) {
-function t(e,n){if(e===n)return !0;if("object"!=typeof e||null===e||"object"!=typeof n||null===n)return !1;const r=/Function|RegExp|Date|Object|Array/,o=Object.prototype.toString.call(e).slice(8,-1),s=Object.prototype.toString.call(n).slice(8,-1);if("Object"!==o&&"Array"!==o&&"Object"!==s&&"Object"!==s&&r.exec(o)[0]===r.exec(s)[0]&&o===s)return !0;if(Object.keys(e).length!==Object.keys(n).length)return !1;for(let r of Object.keys(e)){const o=t(e[r],n[r]);if(!o)return o}return !0}function e(t){if(!t||"object"!=typeof t)return t;if(/Function|RegExp|Date/.test(Object.prototype.toString.call(t)))return t;const n="Array"===Object.prototype.toString.call(t)?[]:{};for(let r in t)n[r]="object"==typeof t[r]?e(t[r]):t[r];return n}const n={subscribeList:{},pubAndNoSub:{},subscribe(t,e){this.pubAndNoSub[t]&&(e(this.pubAndNoSub[t]),Reflect.deleteProperty(this.pubAndNoSub,t)),this.subscribeList[t]?.push(e)||(this.subscribeList[t]=[e]);},publish(t,e){const n=this.subscribeList[t];n&&0!==n.length?n.forEach((t=>t(e))):this.pubAndNoSub[t]=e;},remove(t,e){const n=this.subscribeList[t];n&&0!==n.length&&(e?n.forEach(((n,r)=>{n===e&&this.subscribeList[t].splice(r,1);})):this.subscribeList[t]=[]);}};exports.debounce=function(t,e=1500,n=!0){let r;return function(...o){r&&clearTimeout(r),n?(r||t.apply(this,o),r=setTimeout((()=>r=null),e)):r=setTimeout((()=>t.apply(this,o)),e);}},exports.deepClone=e,exports.get=function(t,e){return e.replace(/\[(\w+)\]/g,".$1").replace(/\["(\w+)"\]/g,".$1").replace(/\['(\w+)'\]/g,".$1").split(".").reduce(((t,e)=>t?.[e]),t)},exports.getSingle=function(t){let e;return function(...n){return e||(e=t.apply(this,n))}},exports.hasChanged=function(e,n){return !t(e,n)},exports.installEventCenter=function(t){const r=e(n);for(let e in n)t[e]=r[e];return t},exports.isObject=function(t){return null!==t&&"object"==typeof t},exports.isSameDeep=t,exports.isSameShallow=function(t,e){if(t===e)return !0;if("object"!=typeof t||null===t||"object"!=typeof e||null===e)return !1;if(Object.keys(t).length!==Object.keys(e).length)return !1;for(let n of Object.keys(t))if(t[n]!==e[n])return !1;return !0},exports.parseAreaListData=function(t){const e=[],{province_list:n,city_list:r,county_list:o}=t;for(const t in n){const s=t.substr(0,2),i={};i.value=n[t],i.label=n[t];for(const t in r){const e=t.substr(0,4),n={};if(e.includes(s)){n.value=r[t],n.label=r[t];for(const t in o){const r={};t.includes(e)&&(r.value=o[t],r.label=o[t],n.children.push(r));}i.children.push(n);}}e.push(i);}return e},exports.shallowClone=function(t){if(!t||"object"!=typeof t)return t;if(/Function|RegExp|Date/.test(Object.prototype.toString.call(t)))return t;const e="Array"===Object.prototype.toString.call(t)?[]:{};for(let n in t)e[n]=t[n];return e},exports.throttle=function(t,e=1500,n="timestamp"){if("timestamp"===n){let n=0;return function(...r){const o=Date.now();o-n>e&&(t.apply(this,r),n=o);}}{let n;return function(...r){n||(n=setTimeout((()=>{t.apply(this,r),n=null;}),e));}}};
-});
-dist.debounce;
-var dist_2 = dist.deepClone;
-dist.get;
-dist.getSingle;
-var dist_5 = dist.hasChanged;
-dist.installEventCenter;
-var dist_7 = dist.isObject;
-var dist_8 = dist.isSameDeep;
-dist.isSameShallow;
-dist.parseAreaListData;
-dist.shallowClone;
-dist.throttle;
+function compare(o1, o2, type) {
+    if (o1 === o2)
+        return true;
+    // 如果基本类型不相等或者不是引用类型，并且不是对象就不用执行了
+    if (typeof o1 !== "object" ||
+        o1 === null ||
+        typeof o2 !== "object" ||
+        o2 === null) {
+        return false;
+    }
+    var len1 = Object.keys(o1).length;
+    var len2 = Object.keys(o2).length;
+    if (len1 !== len2)
+        return false;
+    for (var _i = 0, _a = Object.keys(o1); _i < _a.length; _i++) {
+        var key = _a[_i];
+        if (type === "shallow") {
+            if (o1[key] !== o2[key])
+                return false;
+        }
+        if (type === "deep") {
+            var result = compare(o1[key], o2[key], "deep");
+            if (!result)
+                return result;
+        }
+    }
+    return true;
+}
+/** 对象深比较，比较所有层数据， 深比较主要的点在于，Object或Array实例的每一个属性，基本类型或者特殊构造器类型是否相同 */
+function isSameDeep(o1, o2) {
+    return compare(o1, o2, "deep");
+}
+var dataType = {
+    object: "[object Object]",
+    array: "[object Array]",
+};
+function clone(o, type) {
+    var objType = getType(o);
+    if (objType === dataType.object) {
+        var obj_1 = {};
+        Object.keys(o).forEach(function (k) {
+            obj_1[k] =
+                type === "shallow"
+                    ? o[k]
+                    : clone(o[k], "deep");
+        });
+        return obj_1;
+    }
+    if (objType === dataType.array) {
+        return o.map(function (item) {
+            return type === "shallow" ? item : clone(item, "deep");
+        });
+    }
+    return o;
+}
+/** 深克隆，深克隆主要的点在于，复制Object或Array实例的每一个属性，基本类型和特殊构造器类型*/
+function deepClone(obj) {
+    return clone(obj, "deep");
+}
+function isObject(value) {
+    return value !== null && typeof value === "object";
+}
+/** 判断值，使用深比较 */
+function hasChanged(value, oldValue) {
+    return !isSameDeep(value, oldValue);
+}
+var deepClone_1 = deepClone;
+var hasChanged_1 = hasChanged;
+var isObject_1 = isObject;
+var isSameDeep_1 = isSameDeep;
 
 const setTip = (function () {
     setTimeout(() => {
@@ -94,16 +150,16 @@ function updateStoreState() {
             stateArr.push(...mapComputed);
         const data = {};
         stateArr === null || stateArr === void 0 ? void 0 : stateArr.forEach((key) => {
-            if (!dist_8(instance.data[key], store[key])) {
-                data[key] = dist_2(store[key]);
+            if (!isSameDeep_1(instance.data[key], store[key])) {
+                data[key] = deepClone_1(store[key]);
             }
         });
         if (JSON.stringify(data) !== "{}")
             instance.setData(data);
         if (watch) {
             Object.keys(watch).forEach((key) => {
-                if (!dist_8(instance.watchValue[key], store[key])) {
-                    const newValue = dist_2(store[key]);
+                if (!isSameDeep_1(instance.watchValue[key], store[key])) {
+                    const newValue = deepClone_1(store[key]);
                     watch[key] = watch[key].bind(instance);
                     watch[key](instance.watchValue[key], newValue);
                     instance.watchValue[key] = newValue;
@@ -235,7 +291,7 @@ function proxyComponent(globalOptions = {}) {
 }
 /** 全局混入hook */
 function mixinHooks(hooks, newOptions, globalOptions, options) {
-    const newO = dist_2(newOptions);
+    const newO = deepClone_1(newOptions);
     hooks.forEach((name) => {
         var _a, _b;
         // 这里分割的原因是要注入 lifetimes.created 这种 hook
@@ -283,9 +339,9 @@ function createReactive(target) {
         },
         set(target, key, value, receiver) {
             var _a;
-            const oldV = dist_2(target[key]);
+            const oldV = deepClone_1(target[key]);
             const res = Reflect.set(target, key, value, receiver);
-            if (dist_5(oldV, value)) {
+            if (hasChanged_1(oldV, value)) {
                 (_a = deps.get(key)) === null || _a === void 0 ? void 0 : _a.forEach((item) => item(oldV, value));
             }
             updateStoreState();
@@ -294,7 +350,7 @@ function createReactive(target) {
     });
     for (let k in obj) {
         const child = obj[k];
-        if (dist_7(child)) {
+        if (isObject_1(child)) {
             obj[k] = createReactive(obj[k]);
         }
     }
@@ -371,7 +427,7 @@ function defineStore(options) {
                         `info: filePath: ${instance.is};`);
                     return;
                 }
-                watchValue[key] = dist_2(store[key]);
+                watchValue[key] = deepClone_1(store[key]);
             });
             instance.watchValue = Object.assign(Object.assign({}, instance.watchValue), watchValue);
         }

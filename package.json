@@ -79,6 +79,6 @@
     "typescript": "^4.8.4"
   },
   "dependencies": {
-    "@savage181855/utils": "^1.0.8"
+    "@savage181855/utils": "^1.0.9"
   }
 }
