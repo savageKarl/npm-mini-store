@@ -18,8 +18,8 @@
 - **支持`watch`监听**
 - **支持`state`映射到页面或组件实例**
 - **支持`actions`映射到页面或组件实例**
-- **支持按需渲染**
-- **支持惰性渲染**
+- **按需渲染：只渲染当前页面或组件所使用到的`state`和`computed`**
+- **惰性渲染：只渲染当前页面使用的`state`和`computed`**
 
 ## 安装
 
@@ -233,6 +233,11 @@ Page({
 `mapState`和`mapComputed`都是会映射到页面或组件实例的`data`里面，也就是说，可以直接在视图里面使用，当使用的`store`的数据改变时，会进行diff之后，然后进行`this.setData`。
 
 如果不是要在视图里面直接访问`store`的数据，那么最好少用`mapState`和`mapComputed`，使用`this.xxxx`来访问`store`，来达到性能最大化。
+
+## 使用示例
+
+代码片段：https://developers.weixin.qq.com/s/3bI6ELmM71DL
+
 
 ## 全局混入
 

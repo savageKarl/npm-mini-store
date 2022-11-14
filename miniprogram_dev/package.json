@@ -8,8 +8,5 @@
   "license": "",
   "devDependencies": {
     "miniprogram-api-typings": "^2.8.3-1"
-  },
-  "dependencies": {
-    "@savage181855/mini-store": "^2.0.1"
   }
 }
