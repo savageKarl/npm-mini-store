@@ -16,6 +16,7 @@ const output = [
   {
     format: "esm",
     file: path.resolve(env === "dev" ? devLibsPath : distPath, "index.js"),
+    sourcemap: true,
   },
 ];
 
@@ -29,7 +30,7 @@ const plugins = [
   resolve(),
 ];
 
-// if (env === 'pro') plugins.push(terser())
+if (env === 'pro') plugins.push(terser())
 
 
 module.exports = {
