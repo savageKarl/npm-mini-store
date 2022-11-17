@@ -12,6 +12,33 @@ LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
 OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 PERFORMANCE OF THIS SOFTWARE.
 ***************************************************************************** */
+/* global Reflect, Promise */
+
+var extendStatics = function(d, b) {
+    extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
+    return extendStatics(d, b);
+};
+
+function __extends(d, b) {
+    if (typeof b !== "function" && b !== null)
+        throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+    extendStatics(d, b);
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+}
+
+var __assign = function() {
+    __assign = Object.assign || function __assign(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p)) t[p] = s[p];
+        }
+        return t;
+    };
+    return __assign.apply(this, arguments);
+};
 
 function __rest(s, e) {
     var t = {};
@@ -23,6 +50,16 @@ function __rest(s, e) {
                 t[p[i]] = s[p[i]];
         }
     return t;
+}
+
+function __spreadArray(to, from, pack) {
+    if (pack || arguments.length === 2) for (var i = 0, l = from.length, ar; i < l; i++) {
+        if (ar || !(i in from)) {
+            if (!ar) ar = Array.prototype.slice.call(from, 0, i);
+            ar[i] = from[i];
+        }
+    }
+    return to.concat(ar || Array.prototype.slice.call(from));
 }
 
 // a[3].b -> a.3.b -> [a, 3, b]
@@ -101,10 +138,10 @@ var hasChanged_1 = hasChanged;
 var isObject_1 = isObject;
 var isSameDeep_1 = isSameDeep;
 
-const setTip = (function () {
-    setTimeout(() => {
+var setTip = (function () {
+    setTimeout(function () {
         function tip(text) {
-            console.error(`必须在 app.js|ts 文件 调用 ${text}()，参考：https://www.npmjs.com/package/@savage181855/mini-store`);
+            console.error("\u5FC5\u987B\u5728 app.js|ts \u6587\u4EF6 \u8C03\u7528 ".concat(text, "()\uFF0C\u53C2\u8003\uFF1Ahttps://www.npmjs.com/package/@savage181855/mini-store"));
         }
         if (!types.isProxyPage)
             tip("proxyPage");
@@ -113,7 +150,7 @@ const setTip = (function () {
         if (!types.isProxyApp)
             tip("proxyApp");
     });
-    const types = {
+    var types = {
         isProxyPage: false,
         isProxyComponent: false,
         isProxyApp: false,
@@ -125,31 +162,36 @@ const setTip = (function () {
 
 function getCurrentPagePath() {
     var _a;
-    const pages = getCurrentPages();
+    var pages = getCurrentPages();
     return ((_a = pages[pages.length - 1]) === null || _a === void 0 ? void 0 : _a.route) || '';
 }
 
-class Dep extends Map {
-}
-Dep.stores = {};
-Dep.stack = [];
+var Dep = /** @class */ (function (_super) {
+    __extends(Dep, _super);
+    function Dep() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    Dep.stores = {};
+    Dep.stack = [];
+    return Dep;
+}(Map));
 // not pure function
 function updateStoreState() {
-    const path = getCurrentPagePath();
+    var path = getCurrentPagePath();
     if (!path)
         return;
-    const stores = Dep.stores[path];
+    var stores = Dep.stores[path];
     if (!stores)
         return;
-    stores.forEach((s) => {
-        const { mapState, instance, store, watch, mapComputed } = s;
-        const stateArr = [];
+    stores.forEach(function (s) {
+        var mapState = s.mapState, instance = s.instance, store = s.store, watch = s.watch, mapComputed = s.mapComputed;
+        var stateArr = [];
         if (mapState)
-            stateArr.push(...mapState);
+            stateArr.push.apply(stateArr, mapState);
         if (mapComputed)
-            stateArr.push(...mapComputed);
-        const data = {};
-        stateArr === null || stateArr === void 0 ? void 0 : stateArr.forEach((key) => {
+            stateArr.push.apply(stateArr, mapComputed);
+        var data = {};
+        stateArr === null || stateArr === void 0 ? void 0 : stateArr.forEach(function (key) {
             if (!isSameDeep_1(instance.data[key], store[key])) {
                 data[key] = deepClone_1(store[key]);
             }
@@ -157,9 +199,9 @@ function updateStoreState() {
         if (JSON.stringify(data) !== "{}")
             instance.setData(data);
         if (watch) {
-            Object.keys(watch).forEach((key) => {
+            Object.keys(watch).forEach(function (key) {
                 if (!isSameDeep_1(instance.watchValue[key], store[key])) {
-                    const newValue = deepClone_1(store[key]);
+                    var newValue = deepClone_1(store[key]);
                     watch[key] = watch[key].bind(instance);
                     watch[key](instance.watchValue[key], newValue);
                     instance.watchValue[key] = newValue;
@@ -169,61 +211,60 @@ function updateStoreState() {
     });
 }
 function clearStoreDep() {
-    const path = getCurrentPagePath();
+    var path = getCurrentPagePath();
     Dep.stores[path] = [];
 }
 // not pure function
 function removeStoreDep(instance) {
-    const path = getCurrentPagePath();
-    Dep.stores[path] = Dep.stores[path].filter((item) => item.instance !== instance);
+    var path = getCurrentPagePath();
+    Dep.stores[path] = Dep.stores[path].filter(function (item) { return item.instance !== instance; });
 }
 
 function callUseStoreRef(instance, stores) {
-    stores === null || stores === void 0 ? void 0 : stores.forEach((s) => {
-        const { useStoreRef } = s, rest = __rest(s, ["useStoreRef"]);
+    stores === null || stores === void 0 ? void 0 : stores.forEach(function (s) {
+        var useStoreRef = s.useStoreRef, rest = __rest(s, ["useStoreRef"]);
         useStoreRef(instance, rest);
     });
 }
 function proxyApp() {
     setTip("isProxyApp");
-    const originApp = App;
+    var originApp = App;
     App = function (options) {
-        const rest = __rest(options, ["stores"]);
-        const newOptions = Object.assign(Object.assign({}, rest), { onLaunch(o) {
+        options.stores; var rest = __rest(options, ["stores"]);
+        var newOptions = __assign(__assign({}, rest), { onLaunch: function (o) {
                 var _a;
                 this.type = "app";
-                const { stores } = options;
+                var stores = options.stores;
                 callUseStoreRef(this, stores);
                 (_a = options === null || options === void 0 ? void 0 : options.onLaunch) === null || _a === void 0 ? void 0 : _a.call(this, o);
             } });
         return originApp(newOptions);
     };
 }
-function proxyPage(globalOptions = {}) {
+function proxyPage(globalOptions) {
+    if (globalOptions === void 0) { globalOptions = {}; }
     setTip("isProxyPage");
-    const OriginPage = Page;
+    var OriginPage = Page;
     Page = function (options) {
-        const rest = __rest(options, ["stores"]);
-        let newOptions = Object.assign(Object.assign(Object.assign({}, globalOptions), rest), { onLoad(o) {
+        options.stores; var rest = __rest(options, ["stores"]);
+        var newOptions = __assign(__assign(__assign({}, globalOptions), rest), { onLoad: function (o) {
                 var _a, _b;
-                const { stores } = options;
+                var stores = options.stores;
                 callUseStoreRef(this, stores);
                 (_a = globalOptions === null || globalOptions === void 0 ? void 0 : globalOptions.onLoad) === null || _a === void 0 ? void 0 : _a.call(this, o);
                 (_b = options === null || options === void 0 ? void 0 : options.onLoad) === null || _b === void 0 ? void 0 : _b.call(this, o);
-            },
-            onShow() {
+            }, onShow: function () {
                 var _a, _b;
                 updateStoreState();
                 (_a = globalOptions === null || globalOptions === void 0 ? void 0 : globalOptions.onShow) === null || _a === void 0 ? void 0 : _a.call(this);
                 (_b = options === null || options === void 0 ? void 0 : options.onShow) === null || _b === void 0 ? void 0 : _b.call(this);
-            },
-            onUnload() {
+            }, onUnload: function () {
                 var _a, _b;
                 clearStoreDep();
                 (_a = globalOptions === null || globalOptions === void 0 ? void 0 : globalOptions.onUnload) === null || _a === void 0 ? void 0 : _a.call(this);
                 (_b = options === null || options === void 0 ? void 0 : options.onUnload) === null || _b === void 0 ? void 0 : _b.call(this);
             } });
-        const hooks = [
+        var hooks = [
             "onReady",
             "onHide",
             "onPullDownRefresh",
@@ -236,43 +277,43 @@ function proxyPage(globalOptions = {}) {
         return OriginPage(newOptions);
     };
 }
-function proxyComponent(globalOptions = {}) {
+function proxyComponent(globalOptions) {
+    if (globalOptions === void 0) { globalOptions = {}; }
     setTip("isProxyComponent");
-    const OriginComponent = Component;
+    var OriginComponent = Component;
     Component = function (options) {
-        const rest = __rest(options, ["stores"]);
-        let newOptions = Object.assign(Object.assign(Object.assign({}, globalOptions), rest), { attached() {
+        options.stores; var rest = __rest(options, ["stores"]);
+        var newOptions = __assign(__assign(__assign({}, globalOptions), rest), { attached: function () {
                 var _a, _b;
                 this.route = getCurrentPagePath();
-                const { stores } = options;
+                var stores = options.stores;
                 callUseStoreRef(this, stores);
                 updateStoreState();
                 (_a = options === null || options === void 0 ? void 0 : options.attached) === null || _a === void 0 ? void 0 : _a.call(this);
                 (_b = globalOptions === null || globalOptions === void 0 ? void 0 : globalOptions.attached) === null || _b === void 0 ? void 0 : _b.call(this);
-            },
-            detached() {
+            }, detached: function () {
                 var _a, _b;
                 removeStoreDep(this);
                 (_a = options === null || options === void 0 ? void 0 : options.detached) === null || _a === void 0 ? void 0 : _a.call(this);
                 (_b = globalOptions === null || globalOptions === void 0 ? void 0 : globalOptions.detached) === null || _b === void 0 ? void 0 : _b.call(this);
             }, lifetimes: {
-                attached() {
+                attached: function () {
                     var _a, _b, _c, _d;
                     this.route = getCurrentPagePath();
-                    const { stores } = options;
+                    var stores = options.stores;
                     callUseStoreRef(this, stores);
                     updateStoreState();
                     (_b = (_a = options === null || options === void 0 ? void 0 : options.lifetimes) === null || _a === void 0 ? void 0 : _a.attached) === null || _b === void 0 ? void 0 : _b.call(this);
                     (_d = (_c = globalOptions === null || globalOptions === void 0 ? void 0 : globalOptions.lifetimes) === null || _c === void 0 ? void 0 : _c.attached) === null || _d === void 0 ? void 0 : _d.call(this);
                 },
-                detached() {
+                detached: function () {
                     var _a, _b, _c, _d;
                     removeStoreDep(this);
                     (_b = (_a = options === null || options === void 0 ? void 0 : options.lifetimes) === null || _a === void 0 ? void 0 : _a.detached) === null || _b === void 0 ? void 0 : _b.call(this);
                     (_d = (_c = globalOptions === null || globalOptions === void 0 ? void 0 : globalOptions.lifetimes) === null || _c === void 0 ? void 0 : _c.detached) === null || _d === void 0 ? void 0 : _d.call(this);
                 },
             } });
-        const hooks = [
+        var hooks = [
             "created",
             "ready",
             "moved",
@@ -291,29 +332,29 @@ function proxyComponent(globalOptions = {}) {
 }
 /** 全局混入hook */
 function mixinHooks(hooks, newOptions, globalOptions, options) {
-    const newO = deepClone_1(newOptions);
-    hooks.forEach((name) => {
+    var newO = deepClone_1(newOptions);
+    hooks.forEach(function (name) {
         var _a, _b;
         // 这里分割的原因是要注入 lifetimes.created 这种 hook
-        const paths = name.split(".");
-        const len = paths.length;
-        const indexOne = paths[0];
+        var paths = name.split(".");
+        var len = paths.length;
+        var indexOne = paths[0];
         if (len === 1) {
             newO[indexOne] = function () {
                 var _a, _b;
-                (_a = globalOptions === null || globalOptions === void 0 ? void 0 : globalOptions[indexOne]) === null || _a === void 0 ? void 0 : _a.call(this, ...Array.from(arguments));
-                (_b = options === null || options === void 0 ? void 0 : options[indexOne]) === null || _b === void 0 ? void 0 : _b.call(this, ...Array.from(arguments));
+                (_a = globalOptions === null || globalOptions === void 0 ? void 0 : globalOptions[indexOne]) === null || _a === void 0 ? void 0 : _a.call.apply(_a, __spreadArray([this], Array.from(arguments), false));
+                (_b = options === null || options === void 0 ? void 0 : options[indexOne]) === null || _b === void 0 ? void 0 : _b.call.apply(_b, __spreadArray([this], Array.from(arguments), false));
             };
         }
         else {
-            const indexTwo = paths[1];
+            var indexTwo_1 = paths[1];
             // pageLifetimes 的生命周期会覆盖this上的生命周期
-            if (((_a = globalOptions === null || globalOptions === void 0 ? void 0 : globalOptions[indexOne]) === null || _a === void 0 ? void 0 : _a[indexTwo]) ||
-                ((_b = options === null || options === void 0 ? void 0 : options[indexOne]) === null || _b === void 0 ? void 0 : _b[indexTwo])) {
-                newO[indexOne][indexTwo] = function () {
+            if (((_a = globalOptions === null || globalOptions === void 0 ? void 0 : globalOptions[indexOne]) === null || _a === void 0 ? void 0 : _a[indexTwo_1]) ||
+                ((_b = options === null || options === void 0 ? void 0 : options[indexOne]) === null || _b === void 0 ? void 0 : _b[indexTwo_1])) {
+                newO[indexOne][indexTwo_1] = function () {
                     var _a, _b, _c, _d;
-                    (_b = (_a = globalOptions === null || globalOptions === void 0 ? void 0 : globalOptions[indexOne]) === null || _a === void 0 ? void 0 : _a[indexTwo]) === null || _b === void 0 ? void 0 : _b.call(this, ...Array.from(arguments));
-                    (_d = (_c = options === null || options === void 0 ? void 0 : options[indexOne]) === null || _c === void 0 ? void 0 : _c[indexTwo]) === null || _d === void 0 ? void 0 : _d.call(this, ...Array.from(arguments));
+                    (_b = (_a = globalOptions === null || globalOptions === void 0 ? void 0 : globalOptions[indexOne]) === null || _a === void 0 ? void 0 : _a[indexTwo_1]) === null || _b === void 0 ? void 0 : _b.call.apply(_b, __spreadArray([this], Array.from(arguments), false));
+                    (_d = (_c = options === null || options === void 0 ? void 0 : options[indexOne]) === null || _c === void 0 ? void 0 : _c[indexTwo_1]) === null || _d === void 0 ? void 0 : _d.call.apply(_d, __spreadArray([this], Array.from(arguments), false));
                 };
             }
         }
@@ -323,33 +364,33 @@ function mixinHooks(hooks, newOptions, globalOptions, options) {
 
 // not pure function
 function createReactive(target) {
-    const deps = new Dep();
-    const obj = new Proxy(target, {
-        get(target, key, receiver) {
-            const res = Reflect.get(target, key, receiver);
+    var deps = new Dep();
+    var obj = new Proxy(target, {
+        get: function (target, key, receiver) {
+            var res = Reflect.get(target, key, receiver);
             if (Dep.stack.length > 0) {
                 if (!deps.get(key))
                     deps.set(key, new Set());
-                Dep.stack.forEach((item) => {
+                Dep.stack.forEach(function (item) {
                     var _a;
                     (_a = deps.get(key)) === null || _a === void 0 ? void 0 : _a.add(item);
                 });
             }
             return res;
         },
-        set(target, key, value, receiver) {
+        set: function (target, key, value, receiver) {
             var _a;
-            const oldV = deepClone_1(target[key]);
-            const res = Reflect.set(target, key, value, receiver);
+            var oldV = deepClone_1(target[key]);
+            var res = Reflect.set(target, key, value, receiver);
             if (hasChanged_1(oldV, value)) {
-                (_a = deps.get(key)) === null || _a === void 0 ? void 0 : _a.forEach((item) => item(oldV, value));
+                (_a = deps.get(key)) === null || _a === void 0 ? void 0 : _a.forEach(function (item) { return item(oldV, value); });
             }
             updateStoreState();
             return res;
         },
     });
-    for (let k in obj) {
-        const child = obj[k];
+    for (var k in obj) {
+        var child = obj[k];
         if (isObject_1(child)) {
             obj[k] = createReactive(obj[k]);
         }
@@ -358,7 +399,7 @@ function createReactive(target) {
 }
 // not pure function
 function setupActions(plainStore, proxyStore) {
-    for (let k in plainStore) {
+    for (var k in plainStore) {
         if (typeof plainStore[k] === "function") {
             plainStore[k] = plainStore[k].bind(proxyStore, proxyStore);
         }
@@ -368,7 +409,7 @@ function setupActions(plainStore, proxyStore) {
 function setupPatchOfStore(plainStore, proxyStore) {
     plainStore.patch = function (val) {
         if (typeof val === "object") {
-            for (let k in val) {
+            for (var k in val) {
                 proxyStore[k] = val[k];
             }
         }
@@ -380,17 +421,20 @@ function setupPatchOfStore(plainStore, proxyStore) {
 // not pure function
 function setupComputed(fns, proxyStore) {
     if (fns) {
-        for (let k in fns) {
+        var _loop_1 = function (k) {
             fns[k] = fns[k].bind(proxyStore, proxyStore);
-            Dep.stack.push(() => (proxyStore[k] = fns[k]()));
+            Dep.stack.push(function () { return (proxyStore[k] = fns[k]()); });
             proxyStore[k] = fns[k]();
             Dep.stack.pop();
+        };
+        for (var k in fns) {
+            _loop_1(k);
         }
     }
 }
 function createStore(options) {
-    const plainStore = Object.assign(Object.assign(Object.assign({}, options.state), options.actions), options.computed);
-    const store = createReactive(plainStore);
+    var plainStore = __assign(__assign(__assign({}, options.state), options.actions), options.computed);
+    var store = createReactive(plainStore);
     setupActions(plainStore, store);
     setupPatchOfStore(plainStore, store);
     setupComputed(options.computed, store);
@@ -398,71 +442,72 @@ function createStore(options) {
 }
 
 function defineStore(options) {
-    const state = options.state;
-    const computed = options.computed;
-    const actions = options.actions;
-    const store = createStore(options);
+    var state = options.state;
+    var computed = options.computed;
+    var actions = options.actions;
+    var store = createStore(options);
     return function useStore(instance, options) {
         instance[options.storeKey] = store;
         if (instance.type === "app")
             return;
         // ;debugger;
-        const o = options;
-        const stateKeys = Object.keys(state);
+        var o = options;
+        var stateKeys = Object.keys(state);
         if (o.mapState) {
-            o.mapState.forEach((key) => {
+            o.mapState.forEach(function (key) {
                 if (!stateKeys.includes(key)) {
-                    console.error(`msg: mapState "${key}" not in ${o.storeKey};\n\n` +
-                        `info: filePath: ${instance.is};`);
+                    console.error("msg: mapState \"".concat(key, "\" not in ").concat(o.storeKey, ";\n\n") +
+                        "info: filePath: ".concat(instance.is, ";"));
                     return;
                 }
             });
         }
         if (o.watch) {
             // use to compare watch whether to execute
-            const watchValue = {};
-            Object.keys(o.watch).forEach((key) => {
+            var watchValue_1 = {};
+            Object.keys(o.watch).forEach(function (key) {
                 if (!stateKeys.includes(key)) {
-                    console.error(`msg: watch "${key}" not in ${o.storeKey};\n\n` +
-                        `info: filePath: ${instance.is};`);
+                    console.error("msg: watch \"".concat(key, "\" not in ").concat(o.storeKey, ";\n\n") +
+                        "info: filePath: ".concat(instance.is, ";"));
                     return;
                 }
-                watchValue[key] = deepClone_1(store[key]);
+                watchValue_1[key] = deepClone_1(store[key]);
             });
-            instance.watchValue = Object.assign(Object.assign({}, instance.watchValue), watchValue);
+            instance.watchValue = __assign(__assign({}, instance.watchValue), watchValue_1);
         }
         if (o.mapComputed) {
             // use to compare computed function whether to execute
-            const computedKeys = Object.keys(computed);
-            o.mapComputed.forEach((key) => {
-                if (!computedKeys.includes(key)) {
-                    console.error(`msg: mapComputed "${key}" not in ${o.storeKey};\n\n` +
-                        `info: filePath: ${instance.is};`);
+            var computedKeys_1 = Object.keys(computed);
+            o.mapComputed.forEach(function (key) {
+                if (!computedKeys_1.includes(key)) {
+                    console.error("msg: mapComputed \"".concat(key, "\" not in ").concat(o.storeKey, ";\n\n") +
+                        "info: filePath: ".concat(instance.is, ";"));
                     return;
                 }
             });
         }
         if (o.mapActions) {
             // use to compare computed function whether to execute
-            const actionKeys = Object.keys(actions);
-            o.mapActions.forEach((key) => {
-                if (!actionKeys.includes(key)) {
-                    console.error(`msg: mapActions "${key}" not in ${o.storeKey};\n\n` +
-                        `info: filePath: ${instance.is};`);
+            var actionKeys_1 = Object.keys(actions);
+            o.mapActions.forEach(function (key) {
+                if (!actionKeys_1.includes(key)) {
+                    console.error("msg: mapActions \"".concat(key, "\" not in ").concat(o.storeKey, ";\n\n") +
+                        "info: filePath: ".concat(instance.is, ";"));
                     return;
                 }
                 instance[key] = store[key];
             });
         }
-        const route = instance.route;
+        var route = instance.route;
         Dep.stores[route] = Dep.stores[route] || [];
-        const isExist = Dep.stores[route].some((v) => {
+        var isExist = Dep.stores[route].some(function (v) {
             return v.instance === instance && v.store === store;
         });
         if (!isExist) {
-            Dep.stores[route].push(Object.assign(Object.assign({}, o), { instance: instance, store }));
+            Dep.stores[route].push(__assign(__assign({}, o), { instance: instance, store: store }));
         }
     };
 }
 
 export { defineStore, proxyApp, proxyComponent, proxyPage };
+//# sourceMappingURL=index.js.map
