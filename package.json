@@ -3,7 +3,7 @@
   "version": "1.0.2",
   "main": "miniprogram_dist/index.js",
   "author": "savage",
-  "license": "GPLv3",
+  "license": "GPL-3.0",
   "description": "基于 gulp4 + rollup2 搭建的微信小程序组件库打包脚手架",
   "scripts": {
     "devComponent": "cross-env NODE_ENV=dev gulp watch",

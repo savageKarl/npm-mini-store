@@ -16,6 +16,7 @@ const output = [
   {
     format: "esm",
     file: path.resolve(env === "dev" ? devLibsPath : distPath, "index.js"),
+    sourcemap: true,
   },
 ];
 
