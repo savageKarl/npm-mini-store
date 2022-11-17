@@ -15,6 +15,11 @@ const env = process.env.NODE_ENV;
 const output = [
   {
     format: "esm",
+    file: path.resolve(env === "dev" ? devLibsPath : distPath, "index.mjs"),
+    sourcemap: true,
+  },
+  {
+    format: "cjs",
     file: path.resolve(env === "dev" ? devLibsPath : distPath, "index.js"),
     sourcemap: true,
   },

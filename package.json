@@ -4,6 +4,8 @@
   "description": "微信小程序全局状态管理器",
   "main": "miniprogram_dist/index.js",
   "miniprogram": "miniprogram_dist",
+  "module": "miniprogram_dist/index.mjs",
+  "author": "savage",
   "license": "GPL-3.0",
   "keywords": [
     "mini-store",
@@ -17,9 +19,7 @@
     "状态管理",
     "微信小程序状态管理"
   ],
-  "author": {
-    "name": "savage"
-  },
+
   "repository": {
     "type": "git",
     "url": "https://github.com/savage181855/mini-store-v2"
