@@ -2,7 +2,6 @@ const path = require("path");
 const { execFile } = require("node:child_process");
 const config = require("../config/config");
 const pkg = require("../package.json");
-const shell = require("shelljs");
 
 // const script = [
 //   "cd " + process.cwd(),
@@ -54,7 +53,7 @@ function execShellFile(path, arg) {
 //   ])
 // })
 
-// 用node执行 npm link 命令太慢了，少着3，4秒，慢着30，40秒，这里只用启动开发工具即可
+// 用node执行 npm link 命令太慢了，快则3，4秒，慢则30，40秒，这里只用启动开发工具即可
 execShellFile(path.resolve(__dirname, "shell", "shell3.bat"), [
   config.devToolPath,
   config.devPath,
