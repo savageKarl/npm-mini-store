@@ -2,7 +2,6 @@
   "name": "mini-component-dev",
   "version": "1.0.4",
   "main": "miniprogram_dist/index.cjs",
-  "module": "miniprogram_dist/index.mjs",
   "author": "savage",
   "license": "GPL-3.0",
   "description": "基于 gulp4 + rollup2 搭建的微信小程序组件库打包脚手架",
