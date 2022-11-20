@@ -1,4 +1,4 @@
-import { defineStore } from "../libs/index";
+import { defineStore } from "@savage181855/mini-store";
 
 export const userStore = defineStore({
   state: {

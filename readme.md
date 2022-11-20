@@ -108,6 +108,11 @@ proxyApp();
 proxyPage();
 proxyComponent();
 
+
+// 可以直接这样子使用
+const appStore = useAppStore()
+console.debug(appStore);
+
 App({
   stores: [
     {

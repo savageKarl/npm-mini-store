@@ -1,4 +1,4 @@
-import { proxyApp, proxyPage, proxyComponent } from "./libs/index";
+import { proxyApp, proxyPage, proxyComponent } from "@savage181855/mini-store";
 
 import { useAppStore } from "./store/appStore";
 import { userStore } from "./store/userStore";
@@ -6,6 +6,10 @@ import { userStore } from "./store/userStore";
 proxyApp();
 proxyPage();
 proxyComponent();
+
+// 可以直接这样子调用
+const appStore = useAppStore()
+console.debug(appStore);
 
 App({
   stores: [
