@@ -195,9 +195,9 @@ class BuildTask {
       // libs: getTaskMap("libs"),
     };
 
-    task("clearDist", () => {
-      return src(distPath, { read: false, allowEmpty: true }).pipe(clean());
-    });
+    // task("clearDist", () => {
+    //   return src(distPath, { read: false, allowEmpty: true }).pipe(clean());
+    // });
 
     const clearDevComponent: TaskFunction = () => {
       return src(devComponentPath, { allowEmpty: true }).pipe(clean());

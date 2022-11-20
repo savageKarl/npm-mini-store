@@ -238,6 +238,11 @@ Page({
 
 代码片段：https://developers.weixin.qq.com/s/3bI6ELmM71DL
 
+## 注意
+
+本地调试需要`npm`包需要在当前项目目录下执行`npm link`，在小程序目录执行`npm link xxxx`
+
+## 发布
 
 ## 全局混入
 

@@ -1,9 +1,15 @@
 declare const config: {
-   /** 组件源代码存放的目录 */
+  /** 微信开发工具的安装路径，用于启动项目 */
+  devToolPath: string;
+
+  /** 组件源代码存放的目录 */
   srcComponentPath: string;
 
   /** lib 源代码存放目录 */
   srcLibsPath: string;
+
+  /** example目录，用于实时查看开发效果 */
+  devPath: string;
 
   /** 开发中的组件存放example目录，用于实时查看开发效果 */
   devComponentPath: string;
