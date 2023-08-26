@@ -18,7 +18,6 @@
     "状态管理",
     "微信小程序状态管理"
   ],
-
   "repository": {
     "type": "git",
     "url": "https://github.com/savage181855/mini-store-v2"
@@ -80,6 +79,7 @@
     "typescript": "^4.8.4"
   },
   "dependencies": {
-    "@savage181855/utils": "^1.0.9"
+    "savage-data-types": "^1.0.6",
+    "savage-utils": "^1.0.9"
   }
 }
