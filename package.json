@@ -1,6 +1,6 @@
 {
-  "name": "@savage181855/mini-store",
-  "version": "2.0.6",
+  "name": "savage-mini-store",
+  "version": "2.0.7",
   "description": "微信小程序全局状态管理器",
   "main": "miniprogram_dist/index.js",
   "miniprogram": "miniprogram_dist",
@@ -29,7 +29,8 @@
     "b:lib": "cross-env NODE_ENV=pro rollup -c ./rollup/rollup.config.js",
     "shell": "node ./gulpfile.ts/script.js",
     "dev": "concurrently \"npm run d:com\" \"npm run d:lib\" ",
-    "build": "concurrently \"npm run b:com\" \"npm run b:lib\" "
+    "build": "concurrently \"npm run b:com\" \"npm run b:lib\" ",
+    "push": "npm publish --access public"
   },
   "files": [
     "/miniprogram_dist",
